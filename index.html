@@ -851,7 +851,7 @@ function draw() {
     
     // ── WEST SIDE: Pickleball Court + Mini Golf ──
     // Pickleball: 44'×20' (playing area) + buffer = 60'×30' total
-    var pkCx = 0.16, pkCy = 0.44; // shifted 20' west
+    var pkCx = 0.12, pkCy = 0.44; // 20' gap between house west wing and court
     var pkW = 30/LW/2, pkD = 60/LD/2;
     var pkE = el(pkCx, pkCy);
     // Court surface
@@ -876,7 +876,7 @@ function draw() {
     g.setLineDash([]);
     
     // Mini Golf: south of pickleball (irregular green shape)
-    var mgCx = 0.14, mgCy = 0.54; // shifted west with pickleball
+    var mgCx = 0.12, mgCy = 0.54; // aligned with pickleball
     var mgW = 35/LW/2, mgD = 40/LD/2;
     var mgE = el(mgCx, mgCy);
     // Putting green shape (rounded)
