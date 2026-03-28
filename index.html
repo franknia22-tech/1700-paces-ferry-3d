@@ -61,11 +61,12 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none}
 <div class="rw"><span class="lb">Contour interval</span><span class="vl">2 ft</span></div>
 
 <div class="sc">Proposed House</div>
-<div class="rw"><span class="lb">Main block</span><span class="vl">90 ft × 55 ft</span></div>
-<div class="rw"><span class="lb">West wing</span><span class="vl">40 ft × 35 ft</span></div>
-<div class="rw"><span class="lb">Garage wing</span><span class="vl">36 ft × 28 ft</span></div>
-<div class="rw"><span class="lb">Total footprint</span><span class="vl">~7,310 SF</span></div>
+<div class="rw"><span class="lb">Main block</span><span class="vl">90 ft × 50 ft</span></div>
+<div class="rw"><span class="lb">West wing</span><span class="vl">45 ft × 35 ft</span></div>
+<div class="rw"><span class="lb">Garage wing</span><span class="vl">34 ft × 28 ft</span></div>
+<div class="rw"><span class="lb">Total footprint</span><span class="vl">~7,000 SF</span></div>
 <div class="rw"><span class="lb">2-story total</span><span class="vl">~10,000 SF</span></div>
+<div class="rw"><span class="lb">Pool</span><span class="vl">East side (40'×20')</span></div>
 
 <div class="sc">S-Curve Driveway</div>
 <div class="rw"><span class="lb">Rise</span><span class="vl">55 ft (820→875)</span></div>
@@ -225,8 +226,8 @@ function el(nx, ny) {
   }
   
   // ── GRADED PLATFORM AT 875' (house pad) ──
-  var padCx = 0.48, padCy = 0.45;
-  var padHalfW = 75 / LW;
+  var padCx = 0.52, padCy = 0.45;
+  var padHalfW = 100 / LW; // wider to include pool on east side
   var padHalfD = 55 / LD;
   var padElev = 875;
   
@@ -388,23 +389,38 @@ function rsz() {
 // ── HOUSE FOOTPRINT ──
 // Main block 90'×55', west wing 40'×35', garage 36'×28'
 // Positioned at ny~0.22-0.28 (upper slope, pad ~886-888)
+// ── HOUSE FOOTPRINT — ~7,000 SF ──
+// Main block: 90'×50' = 4,500 SF
+// West wing:  45'×35' = 1,575 SF
+// Garage:     34'×28' =   952 SF
+// Total:              ≈ 7,027 SF
 var houseFP = (function() {
   var f2x = function(ft) { return ft / LW; };
   var f2y = function(ft) { return ft / LD; };
-  var cx = 0.48, cy = 0.45; // at the ridge / top of hill at 880'
-  var mw = f2x(90)/2, md = f2y(55)/2;
-  var ww = f2x(40), wd = f2y(35)/2;
-  var gw = f2x(36), gd = f2y(28)/2;
+  var cx = 0.45, cy = 0.45; // shifted slightly west to make room for pool on east side
+  var mw = f2x(90)/2, md = f2y(50)/2;    // main 90×50
+  var ww = f2x(45), wd = f2y(35)/2;       // west wing 45×35
+  var gw = f2x(34), gd = f2y(28)/2;       // garage 34×28
   return [
+    // West wing NW
     { nx: cx-mw-ww+f2x(5), ny: cy-wd },
+    // West wing NE = Main NW
     { nx: cx-mw, ny: cy-wd },
+    // Main block NW
     { nx: cx-mw, ny: cy-md },
+    // Main block NE
     { nx: cx+mw, ny: cy-md },
+    // Garage NE
     { nx: cx+mw+gw-f2x(5), ny: cy-md },
+    // Garage SE
     { nx: cx+mw+gw-f2x(5), ny: cy-md+f2y(28) },
+    // Main jog east
     { nx: cx+mw, ny: cy-md+f2y(28) },
+    // Main block SE
     { nx: cx+mw, ny: cy+md },
+    // Main block SW
     { nx: cx-mw, ny: cy+md },
+    // West wing SW
     { nx: cx-mw-ww+f2x(5), ny: cy+wd },
   ];
 })();
@@ -754,8 +770,8 @@ function draw() {
     }
     g.closePath(); g.fill(); g.stroke();
     
-    // ── Pool (behind house, downhill side) ──
-    var poolCx=0.42, poolCy=0.55;
+    // ── Pool (east side of house, on the pad) ──
+    var poolCx=0.68, poolCy=0.45;
     var poolW=40/LW/2, poolD=20/LD/2;
     var deckW=60/LW/2, deckD=35/LD/2;
     var poolE2=el(poolCx,poolCy);
@@ -791,12 +807,13 @@ function draw() {
         g.fillStyle=col;g.fillText(txt,p.x,p.y);
       };
       // House dimensions
-      lbH("90'", 0.48, 0.51, 5, '#44aaff', 7);
-      lbH("55'", 0.60, 0.45, 5, '#44aaff', 7);
-      lbH("GARAGE 36'×28'", 0.58, 0.42, 8, 'rgba(68,170,255,0.6)', 6);
-      lbH("WEST WING 40'×35'", 0.34, 0.45, 8, 'rgba(68,170,255,0.6)', 6);
+      lbH("90'", 0.45, 0.51, 5, '#44aaff', 7);
+      lbH("50'", 0.57, 0.45, 5, '#44aaff', 7);
+      lbH("GARAGE 34'×28'", 0.56, 0.42, 8, 'rgba(68,170,255,0.6)', 6);
+      lbH("WEST WING 45'×35'", 0.30, 0.45, 8, 'rgba(68,170,255,0.6)', 6);
+      lbH("~7,000 SF FOOTPRINT", 0.45, 0.45, 12, 'rgba(68,170,255,0.5)', 6);
       
-      // Pool (behind house, rear/downhill)
+      // Pool (east side of house)
       lbH("POOL 40'×20'", poolCx, poolCy, 8, '#44ccff', 7);
       lbH("DECK 60'×35'", poolCx, poolCy+0.03, 4, 'rgba(160,180,200,0.5)', 6);
       
@@ -954,8 +971,8 @@ function draw() {
     
     lb('W PACES FERRY RD NW (820\')', 0.50, 0.005, 5, '#ffdd66', 10);
     lb('60\' CLIMB ↑', 0.25, 0.20, 5, 'rgba(255,150,100,0.6)', 8);
-    lb('GRADED PAD (875\')', 0.48, 0.45, 26, '#ffffff', 11);
-    lb('10,000 SF · 2 STORY · NEW HOME', 0.48, 0.45, 20, 'rgba(255,255,255,0.55)', 7);
+    lb('GRADED PAD (875\')', 0.45, 0.45, 26, '#ffffff', 11);
+    lb('7,000 SF FOOTPRINT · 10K SF 2-STORY', 0.45, 0.45, 20, 'rgba(255,255,255,0.55)', 7);
     lb('↓ 40\' DROP TO REAR', 0.50, 0.70, 5, 'rgba(255,200,100,0.5)', 8);
     lb('REAR BOUNDARY (840\')', 0.50, 0.95, 3, 'rgba(255,180,100,0.5)', 8);
     
