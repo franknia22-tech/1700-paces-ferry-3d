@@ -75,11 +75,12 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none}
 <div class="rw"><span class="lb">Width</span><span class="vl">30 ft (graded turns)</span></div>
 
 <div class="sc">Retaining Wall Terraces</div>
-<div class="rw"><span class="lb">Wall 1</span><span class="vl am">872→862 (10' drop)</span></div>
-<div class="rw"><span class="lb">Terrace 1</span><span class="vl">862' flat</span></div>
-<div class="rw"><span class="lb">Wall 2</span><span class="vl am">862→852 (10' drop)</span></div>
-<div class="rw"><span class="lb">Terrace 2</span><span class="vl">852' flat</span></div>
-<div class="rw"><span class="lb">Width</span><span class="vl">~296' (lot width)</span></div>
+<div class="rw"><span class="lb">Wall 1</span><span class="vl rd">870→855 (15' drop)</span></div>
+<div class="rw"><span class="lb">Terrace 1</span><span class="vl">855' flat (~52' deep)</span></div>
+<div class="rw"><span class="lb">Wall 2</span><span class="vl am">855→845 (10' drop)</span></div>
+<div class="rw"><span class="lb">Terrace 2</span><span class="vl">845' flat (~52' deep)</span></div>
+<div class="rw"><span class="lb">Width</span><span class="vl">~312' (lot width)</span></div>
+<div class="rw"><span class="lb">Stairs</span><span class="vl">Center, 10 steps</span></div>
 <div class="rw"><span class="lb">Total usable flat</span><span class="vl gn">+2 terraces</span></div>
 
 <div class="sc">Adjacent Owners</div>
@@ -251,9 +252,9 @@ function el(nx, ny) {
   var wallRight = 0.90;
   
   if (nx > wallLeft && nx < wallRight) {
-    var wall1_ny = 0.555;
-    var terr1_end = 0.66;
-    var terr2_end = 0.78;
+    var wall1_ny = 0.62;   // pushed back to give room for pool behind house
+    var terr1_end = 0.73;  // end of terrace 1 / wall 2
+    var terr2_end = 0.84;  // end of terrace 2
     
     // Hard edge blend at property line sides
     var edgeFade = 1.0;
@@ -262,22 +263,22 @@ function el(nx, ny) {
     edgeFade = Math.max(0, Math.min(1, edgeFade));
     
     if (ny > wall1_ny && ny < wall1_ny + 0.006) {
-      // Wall 1 face — sharp 10' drop
+      // Wall 1 face — 15' drop (870→855)
       var wt = (ny - wall1_ny) / 0.006;
-      e = e * (1 - edgeFade) + (872 - wt * 10) * edgeFade;
+      e = e * (1 - edgeFade) + (870 - wt * 15) * edgeFade;
     }
     else if (ny >= wall1_ny + 0.006 && ny < terr1_end) {
-      // Terrace 1 — completely flat at 862'
-      e = 862 * edgeFade + e * (1 - edgeFade);
+      // Terrace 1 — flat at 855'
+      e = 855 * edgeFade + e * (1 - edgeFade);
     }
     else if (ny >= terr1_end && ny < terr1_end + 0.006) {
-      // Wall 2 face — sharp 10' drop
+      // Wall 2 face — 10' drop (855→845)
       var wt2 = (ny - terr1_end) / 0.006;
-      e = e * (1 - edgeFade) + (862 - wt2 * 10) * edgeFade;
+      e = e * (1 - edgeFade) + (855 - wt2 * 10) * edgeFade;
     }
     else if (ny >= terr1_end + 0.006 && ny < terr2_end) {
-      // Terrace 2 — completely flat at 852'
-      e = 852 * edgeFade + e * (1 - edgeFade);
+      // Terrace 2 — flat at 845'
+      e = 845 * edgeFade + e * (1 - edgeFade);
     }
   }
   
@@ -868,14 +869,14 @@ function draw() {
 
   // ── RETAINING WALLS (3D) ──
   if (show.H) {
-    var wL = 0.10, wR = 0.88;
+    var wL = 0.08, wR = 0.90;
     var wallColor1 = 'rgba(160,140,120,0.7)';
     var wallColor2 = 'rgba(140,120,100,0.7)';
     var wallTopCol = 'rgba(180,160,140,0.5)';
     
-    // Wall 1: at ny=0.555, drops from 872 to 862 (10' tall)
-    var w1ny = 0.555;
-    var w1top = 872, w1bot = 862;
+    // Wall 1: at ny=0.62, drops from 870 to 855 (15' tall)
+    var w1ny = 0.62;
+    var w1top = 870, w1bot = 855;
     var w1Steps = 20;
     for (var s = 0; s < w1Steps; s++) {
       var sx0 = wL + (wR - wL) * s / w1Steps;
@@ -904,9 +905,9 @@ function draw() {
     g.lineTo(cap1c.x, cap1c.y); g.lineTo(cap1d.x, cap1d.y);
     g.closePath(); g.fill();
     
-    // Wall 2: at ny=0.66, drops from 862 to 852 (10' tall)
-    var w2ny = 0.66;
-    var w2top = 862, w2bot = 852;
+    // Wall 2: at ny=0.73, drops from 855 to 845 (10' tall)
+    var w2ny = 0.73;
+    var w2top = 855, w2bot = 845;
     for (var s = 0; s < w1Steps; s++) {
       var sx0 = wL + (wR - wL) * s / w1Steps;
       var sx1 = wL + (wR - wL) * (s + 1) / w1Steps;
@@ -933,6 +934,68 @@ function draw() {
     g.lineTo(cap2c.x, cap2c.y); g.lineTo(cap2d.x, cap2d.y);
     g.closePath(); g.fill();
     
+    // ── STAIRS between terraces (center) ──
+    var stairCx = 0.50;
+    var stairW = 8 / LW; // 8' wide stairway
+    var stairNyTop = w1ny + 0.008;  // just below wall 1
+    var stairNyBot = w2ny - 0.004;  // just above wall 2
+    var numSteps = 15; // 15 steps for 15' drop (855→845... actually for wall1→terr1 is 0' since same level)
+    
+    // Stairs from Terrace 1 (855') down to Terrace 2 (845') — 10 steps
+    var stair2Top = 855;
+    var stair2Bot = 845;
+    var s2nyStart = w2ny - 0.002;
+    var s2nyEnd = w2ny + 0.008;
+    var s2Steps = 10;
+    
+    for (var si = 0; si < s2Steps; si++) {
+      var st = si / s2Steps;
+      var sny0 = s2nyStart + (s2nyEnd - s2nyStart) * st;
+      var sny1 = s2nyStart + (s2nyEnd - s2nyStart) * (st + 1/s2Steps);
+      var stepE = stair2Top - st * (stair2Top - stair2Bot) / 1;
+      stepE = stair2Top - (si + 1) * (stair2Top - stair2Bot) / s2Steps;
+      
+      var sa = pr(stairCx - stairW, sny0, stepE + (stair2Top - stair2Bot) / s2Steps);
+      var sb = pr(stairCx + stairW, sny0, stepE + (stair2Top - stair2Bot) / s2Steps);
+      var sc = pr(stairCx + stairW, sny1, stepE);
+      var sd = pr(stairCx - stairW, sny1, stepE);
+      
+      // Step tread (top surface)
+      g.fillStyle = 'rgba(180,170,160,0.6)';
+      g.strokeStyle = 'rgba(120,110,100,0.5)';
+      g.lineWidth = 0.5;
+      g.beginPath();
+      g.moveTo(sa.x, sa.y); g.lineTo(sb.x, sb.y);
+      g.lineTo(sc.x, sc.y); g.lineTo(sd.x, sd.y);
+      g.closePath(); g.fill(); g.stroke();
+      
+      // Step riser (front face)
+      var re0 = stepE;
+      var re1 = stepE + (stair2Top - stair2Bot) / s2Steps;
+      var ra = pr(stairCx - stairW, sny1, re0);
+      var rb = pr(stairCx + stairW, sny1, re0);
+      var rc = pr(stairCx + stairW, sny1, re1);
+      var rd = pr(stairCx - stairW, sny1, re1);
+      g.fillStyle = 'rgba(150,140,130,0.5)';
+      g.beginPath();
+      g.moveTo(ra.x, ra.y); g.lineTo(rb.x, rb.y);
+      g.lineTo(rc.x, rc.y); g.lineTo(rd.x, rd.y);
+      g.closePath(); g.fill(); g.stroke();
+    }
+    
+    // Stairs label
+    if (show.L) {
+      var stairMidNy = (s2nyStart + s2nyEnd) / 2;
+      var stairMidE = (stair2Top + stair2Bot) / 2;
+      var stP = pr(stairCx + stairW + 0.02, stairMidNy, stairMidE);
+      g.font = 'bold 7px -apple-system,sans-serif';
+      g.textAlign = 'left';
+      g.fillStyle = 'rgba(0,0,0,0.4)'; g.fillText('STAIRS', stP.x+1, stP.y+1);
+      g.fillStyle = '#ddc090'; g.fillText('STAIRS', stP.x, stP.y);
+      g.fillStyle = 'rgba(0,0,0,0.4)'; g.fillText('10 STEPS', stP.x+1, stP.y+10);
+      g.fillStyle = 'rgba(221,192,144,0.6)'; g.fillText('10 STEPS', stP.x, stP.y+9);
+    }
+    
     // Terrace labels
     if (show.L) {
       function lbW(txt, nx, ny, oy, col, sz) {
@@ -944,18 +1007,18 @@ function draw() {
         g.fillStyle = col; g.fillText(txt, p.x, p.y);
       }
       // Terrace 1
-      lbW("TERRACE 1 (862')", 0.50, 0.61, 5, '#e8d0a0', 8);
-      lbW("RETAINING WALL 1 — 10' DROP (872→862)", 0.50, 0.555, 12, '#ddc090', 7);
+      lbW("TERRACE 1 (855')", 0.50, 0.675, 5, '#e8d0a0', 8);
+      lbW("RETAINING WALL 1 — 15' DROP (870→855)", 0.50, 0.62, 16, '#ddc090', 7);
       // Terrace 2
-      lbW("TERRACE 2 (852')", 0.50, 0.72, 5, '#e8d0a0', 8);
-      lbW("RETAINING WALL 2 — 10' DROP (862→852)", 0.50, 0.66, 12, '#ddc090', 7);
+      lbW("TERRACE 2 (845')", 0.50, 0.79, 5, '#e8d0a0', 8);
+      lbW("RETAINING WALL 2 — 10' DROP (855→845)", 0.50, 0.73, 12, '#ddc090', 7);
       
       // Dimensions
-      var t1depth_ft = Math.round((0.66 - 0.563) * LD);
-      var t2depth_ft = Math.round((0.77 - 0.668) * LD);
+      var t1depth_ft = Math.round((0.73 - 0.626) * LD);
+      var t2depth_ft = Math.round((0.84 - 0.736) * LD);
       var twidth_ft = Math.round((wR - wL) * LW);
-      lbW(twidth_ft + "' wide × ~" + t1depth_ft + "' deep", 0.50, 0.61, -1, 'rgba(232,208,160,0.5)', 6);
-      lbW(twidth_ft + "' wide × ~" + t2depth_ft + "' deep", 0.50, 0.72, -1, 'rgba(232,208,160,0.5)', 6);
+      lbW(twidth_ft + "' wide × ~" + t1depth_ft + "' deep", 0.50, 0.675, -1, 'rgba(232,208,160,0.5)', 6);
+      lbW(twidth_ft + "' wide × ~" + t2depth_ft + "' deep", 0.50, 0.79, -1, 'rgba(232,208,160,0.5)', 6);
     }
   }
 
