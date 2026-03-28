@@ -1213,24 +1213,89 @@ function draw() {
     }
   }
 
-  // ── DRIVEWAY ──
+  // ── DRIVEWAY (concrete with brick borders) ──
   if (show.D) {
-    var drvPts = driveway(200);
-    // 30' wide driveway — outer edge
-    g.strokeStyle='rgba(255,80,160,0.18)';g.lineWidth=Math.max(10,30*zoom);
-    g.lineCap='round';g.lineJoin='round';
+    var drvPts = driveway(300);
+    var halfW = 15 / LW; // 15' each side = 30' wide
+    
+    // Compute perpendicular offsets for left and right edges
+    var leftEdge = [], rightEdge = [];
+    for (var i = 0; i < drvPts.length; i++) {
+      var dx, dy;
+      if (i === 0) { dx = drvPts[1].nx - drvPts[0].nx; dy = drvPts[1].ny - drvPts[0].ny; }
+      else if (i === drvPts.length - 1) { dx = drvPts[i].nx - drvPts[i-1].nx; dy = drvPts[i].ny - drvPts[i-1].ny; }
+      else { dx = drvPts[i+1].nx - drvPts[i-1].nx; dy = drvPts[i+1].ny - drvPts[i-1].ny; }
+      var len = Math.sqrt(dx*dx + dy*dy);
+      if (len < 0.0001) len = 0.0001;
+      var nx2 = -dy / len * halfW;
+      var ny2 = dx / len * halfW * (LW/LD); // aspect correction
+      leftEdge.push({ nx: drvPts[i].nx + nx2, ny: drvPts[i].ny + ny2, e: drvPts[i].e });
+      rightEdge.push({ nx: drvPts[i].nx - nx2, ny: drvPts[i].ny - ny2, e: drvPts[i].e });
+    }
+    
+    // Draw concrete surface as filled polygon segments
+    for (var i = 0; i < drvPts.length - 1; i++) {
+      var lp0 = pr(leftEdge[i].nx, leftEdge[i].ny, leftEdge[i].e);
+      var lp1 = pr(leftEdge[i+1].nx, leftEdge[i+1].ny, leftEdge[i+1].e);
+      var rp0 = pr(rightEdge[i].nx, rightEdge[i].ny, rightEdge[i].e);
+      var rp1 = pr(rightEdge[i+1].nx, rightEdge[i+1].ny, rightEdge[i+1].e);
+      
+      // Concrete fill — light warm gray
+      g.fillStyle = 'rgba(195,190,180,0.55)';
+      g.beginPath();
+      g.moveTo(lp0.x, lp0.y); g.lineTo(lp1.x, lp1.y);
+      g.lineTo(rp1.x, rp1.y); g.lineTo(rp0.x, rp0.y);
+      g.closePath(); g.fill();
+    }
+    
+    // Concrete joints (cross lines every ~20')
+    var jointSpacing = Math.floor(drvPts.length / 18);
+    for (var i = jointSpacing; i < drvPts.length; i += jointSpacing) {
+      var lp = pr(leftEdge[i].nx, leftEdge[i].ny, leftEdge[i].e);
+      var rp = pr(rightEdge[i].nx, rightEdge[i].ny, rightEdge[i].e);
+      g.strokeStyle = 'rgba(160,155,145,0.35)';
+      g.lineWidth = 0.5;
+      g.beginPath(); g.moveTo(lp.x, lp.y); g.lineTo(rp.x, rp.y); g.stroke();
+    }
+    
+    // Brick border — LEFT edge
+    g.strokeStyle = 'rgba(165,90,55,0.7)'; // brick red-brown
+    g.lineWidth = Math.max(2, 4 * zoom);
+    g.lineCap = 'round'; g.lineJoin = 'round';
     g.beginPath();
-    for(var i=0;i<drvPts.length;i++){var p=pr(drvPts[i].nx,drvPts[i].ny,drvPts[i].e);if(i===0)g.moveTo(p.x,p.y);else g.lineTo(p.x,p.y);}
+    for (var i = 0; i < leftEdge.length; i++) {
+      var p = pr(leftEdge[i].nx, leftEdge[i].ny, leftEdge[i].e);
+      if (i === 0) g.moveTo(p.x, p.y); else g.lineTo(p.x, p.y);
+    }
     g.stroke();
-    // Main surface
-    g.strokeStyle='rgba(255,80,160,0.45)';g.lineWidth=Math.max(7,24*zoom);
+    
+    // Brick border — RIGHT edge
     g.beginPath();
-    for(var i=0;i<drvPts.length;i++){var p=pr(drvPts[i].nx,drvPts[i].ny,drvPts[i].e);if(i===0)g.moveTo(p.x,p.y);else g.lineTo(p.x,p.y);}
+    for (var i = 0; i < rightEdge.length; i++) {
+      var p = pr(rightEdge[i].nx, rightEdge[i].ny, rightEdge[i].e);
+      if (i === 0) g.moveTo(p.x, p.y); else g.lineTo(p.x, p.y);
+    }
     g.stroke();
-    // Center
-    g.strokeStyle='rgba(220,200,190,0.3)';g.lineWidth=Math.max(2,7*zoom);
+    
+    // Thin brick accent line inside each border (double border look)
+    g.strokeStyle = 'rgba(140,75,45,0.4)';
+    g.lineWidth = Math.max(1, 2 * zoom);
+    var innerOff = 0.3; // slight inset
     g.beginPath();
-    for(var i=0;i<drvPts.length;i++){var p=pr(drvPts[i].nx,drvPts[i].ny,drvPts[i].e);if(i===0)g.moveTo(p.x,p.y);else g.lineTo(p.x,p.y);}
+    for (var i = 0; i < leftEdge.length; i++) {
+      var inx = leftEdge[i].nx * (1-innerOff) + drvPts[i].nx * innerOff;
+      var iny = leftEdge[i].ny * (1-innerOff) + drvPts[i].ny * innerOff;
+      var p = pr(inx, iny, leftEdge[i].e);
+      if (i === 0) g.moveTo(p.x, p.y); else g.lineTo(p.x, p.y);
+    }
+    g.stroke();
+    g.beginPath();
+    for (var i = 0; i < rightEdge.length; i++) {
+      var inx = rightEdge[i].nx * (1-innerOff) + drvPts[i].nx * innerOff;
+      var iny = rightEdge[i].ny * (1-innerOff) + drvPts[i].ny * innerOff;
+      var p = pr(inx, iny, rightEdge[i].e);
+      if (i === 0) g.moveTo(p.x, p.y); else g.lineTo(p.x, p.y);
+    }
     g.stroke();
     
     // Elevation stations
