@@ -66,13 +66,13 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none}
 <div class="rw"><span class="lb">Garage wing</span><span class="vl">34 ft × 28 ft</span></div>
 <div class="rw"><span class="lb">Total footprint</span><span class="vl">~7,000 SF</span></div>
 <div class="rw"><span class="lb">2-story total</span><span class="vl">~10,000 SF</span></div>
-<div class="rw"><span class="lb">Pool</span><span class="vl">East side (40'×20')</span></div>
+<div class="rw"><span class="lb">Pool</span><span class="vl">West side (40'×20')</span></div>
 
 <div class="sc">S-Curve Driveway</div>
 <div class="rw"><span class="lb">Rise</span><span class="vl">55 ft (820→875)</span></div>
 <div class="rw"><span class="lb">Path length</span><span class="vl">~420 ft</span></div>
 <div class="rw"><span class="lb">Target grade</span><span class="vl am">~15% consistent</span></div>
-<div class="rw"><span class="lb">Width</span><span class="vl">20 ft asphalt</span></div>
+<div class="rw"><span class="lb">Width</span><span class="vl">30 ft (graded turns)</span></div>
 
 <div class="sc">Retaining Wall Terraces</div>
 <div class="rw"><span class="lb">Wall 1</span><span class="vl am">872→862 (10' drop)</span></div>
@@ -226,8 +226,8 @@ function el(nx, ny) {
   }
   
   // ── GRADED PLATFORM AT 875' (house pad) ──
-  var padCx = 0.52, padCy = 0.45;
-  var padHalfW = 100 / LW; // wider to include pool on east side
+  var padCx = 0.40, padCy = 0.45;
+  var padHalfW = 110 / LW; // wide enough for house + pool on west side
   var padHalfD = 55 / LD;
   var padElev = 875;
   
@@ -246,49 +246,93 @@ function el(nx, ny) {
   // ── RETAINING WALL TERRACES (backyard) ──
   // Terrace 1: flat at 862' with 10' wall (872→862) 
   // Terrace 2: flat at 852' with 10' wall (862→852)
-  // Both span most of the lot width (inside property lines)
-  var wallLeft = 0.10;  // ~38' from west edge
-  var wallRight = 0.88; // ~38' from east edge
+  // Both span full lot width (inside property lines)
+  var wallLeft = 0.08;
+  var wallRight = 0.90;
   
   if (nx > wallLeft && nx < wallRight) {
-    // Terrace 1: starts right after house pad drops to ~872', flat at 862'
-    // Wall face at ny where natural grade = ~872 (approx ny=0.56)
-    // Terrace runs from wall to where natural grade = ~862 (approx ny=0.65)
-    var wall1_ny = 0.555; // retaining wall 1 location
-    var terr1_end = 0.66; // end of terrace 1 / wall 2 location
-    var terr2_end = 0.77; // end of terrace 2
+    var wall1_ny = 0.555;
+    var terr1_end = 0.66;
+    var terr2_end = 0.78;
     
-    // Edge blend (taper near property edges)
+    // Hard edge blend at property line sides
     var edgeFade = 1.0;
-    if (nx < wallLeft + 0.04) edgeFade = (nx - wallLeft) / 0.04;
-    if (nx > wallRight - 0.04) edgeFade = (wallRight - nx) / 0.04;
+    if (nx < wallLeft + 0.03) edgeFade = (nx - wallLeft) / 0.03;
+    if (nx > wallRight - 0.03) edgeFade = (wallRight - nx) / 0.03;
     edgeFade = Math.max(0, Math.min(1, edgeFade));
     
-    if (ny > wall1_ny && ny < wall1_ny + 0.008) {
-      // Wall 1 face — sharp 10' drop from 872 to 862
-      var wt = (ny - wall1_ny) / 0.008;
-      var wallE = 872 - wt * 10;
-      e = e * (1 - edgeFade) + wallE * edgeFade;
+    if (ny > wall1_ny && ny < wall1_ny + 0.006) {
+      // Wall 1 face — sharp 10' drop
+      var wt = (ny - wall1_ny) / 0.006;
+      e = e * (1 - edgeFade) + (872 - wt * 10) * edgeFade;
     }
-    else if (ny >= wall1_ny + 0.008 && ny < terr1_end) {
-      // Terrace 1 — flat at 862'
-      e = e * (1 - edgeFade) + 862 * edgeFade;
+    else if (ny >= wall1_ny + 0.006 && ny < terr1_end) {
+      // Terrace 1 — completely flat at 862'
+      e = 862 * edgeFade + e * (1 - edgeFade);
     }
-    else if (ny >= terr1_end && ny < terr1_end + 0.008) {
-      // Wall 2 face — sharp 10' drop from 862 to 852
-      var wt2 = (ny - terr1_end) / 0.008;
-      var wallE2 = 862 - wt2 * 10;
-      e = e * (1 - edgeFade) + wallE2 * edgeFade;
+    else if (ny >= terr1_end && ny < terr1_end + 0.006) {
+      // Wall 2 face — sharp 10' drop
+      var wt2 = (ny - terr1_end) / 0.006;
+      e = e * (1 - edgeFade) + (862 - wt2 * 10) * edgeFade;
     }
-    else if (ny >= terr1_end + 0.008 && ny < terr2_end) {
-      // Terrace 2 — flat at 852'
-      e = e * (1 - edgeFade) + 852 * edgeFade;
+    else if (ny >= terr1_end + 0.006 && ny < terr2_end) {
+      // Terrace 2 — completely flat at 852'
+      e = 852 * edgeFade + e * (1 - edgeFade);
     }
   }
   
-  // Micro terrain
-  e += Math.sin(nx * 24 + 1.3) * Math.cos(ny * 20 + 0.8) * 0.35;
-  e += Math.sin(nx * 38 + 2.5) * Math.cos(ny * 32 + 1.7) * 0.15;
+  // ── DRIVEWAY GRADING — flatten turning areas, 30' wide ──
+  // S-curve waypoints (must match driveway function)
+  var dwWP = [
+    {nx:0.27,ny:0.025}, {nx:0.30,ny:0.06}, {nx:0.55,ny:0.10},
+    {nx:0.72,ny:0.16}, {nx:0.62,ny:0.24}, {nx:0.32,ny:0.30},
+    {nx:0.35,ny:0.35}, {nx:0.48,ny:0.42}
+  ];
+  // Check distance to each waypoint — flatten within 15' radius (30' wide)
+  var driveRadius = 15 / LW; // 15' each side = 30' total width
+  var flatRadius = 22 / LW;  // wider at turn apexes
+  for (var wi = 0; wi < dwWP.length; wi++) {
+    var wp = dwWP[wi];
+    var ddx = (nx - wp.nx);
+    var ddy = (ny - wp.ny) * (LW / LD); // correct aspect ratio
+    var dd = Math.sqrt(ddx*ddx + ddy*ddy);
+    // Turning apexes (points 3 and 5) get wider flat area
+    var isTurn = (wi === 3 || wi === 5);
+    var rad = isTurn ? flatRadius * 1.5 : driveRadius;
+    if (dd < rad) {
+      // Expected elevation at this waypoint (interpolate along grade)
+      var wpT = wi / (dwWP.length - 1);
+      var wpElev = 820 + wpT * 55; // linear 820 to 875
+      var blend = dd / rad;
+      blend = blend * blend; // ease
+      e = wpElev * (1 - blend) + e * blend;
+    }
+  }
+  // Also flatten along line segments between waypoints
+  for (var wi = 0; wi < dwWP.length - 1; wi++) {
+    var a = dwWP[wi], b = dwWP[wi+1];
+    // Project point onto segment
+    var abx = b.nx - a.nx, aby = b.ny - a.ny;
+    var apx = nx - a.nx, apy = ny - a.ny;
+    var abLen2 = abx*abx + aby*aby;
+    if (abLen2 > 0) {
+      var t = Math.max(0, Math.min(1, (apx*abx + apy*aby) / abLen2));
+      var projX = a.nx + t * abx;
+      var projY = a.ny + t * aby;
+      var distToSeg = Math.sqrt(Math.pow(nx - projX, 2) + Math.pow((ny - projY) * LW / LD, 2));
+      if (distToSeg < driveRadius) {
+        var segT = (wi + t) / (dwWP.length - 1);
+        var segElev = 820 + segT * 55;
+        var blend = distToSeg / driveRadius;
+        blend = blend * blend;
+        e = segElev * (1 - blend) + e * blend;
+      }
+    }
+  }
+  
+  // Micro terrain (reduced in graded areas)
+  e += Math.sin(nx * 24 + 1.3) * Math.cos(ny * 20 + 0.8) * 0.25;
+  e += Math.sin(nx * 38 + 2.5) * Math.cos(ny * 32 + 1.7) * 0.10;
   
   return Math.max(EMIN, Math.min(EMAX, e));
 }
@@ -770,8 +814,8 @@ function draw() {
     }
     g.closePath(); g.fill(); g.stroke();
     
-    // ── Pool (east side of house, on the pad) ──
-    var poolCx=0.68, poolCy=0.45;
+    // ── Pool (west side of house, on the 875' pad) ──
+    var poolCx=0.24, poolCy=0.45;
     var poolW=40/LW/2, poolD=20/LD/2;
     var deckW=60/LW/2, deckD=35/LD/2;
     var poolE2=el(poolCx,poolCy);
@@ -918,14 +962,14 @@ function draw() {
   // ── DRIVEWAY ──
   if (show.D) {
     var drvPts = driveway(200);
-    // Glow
-    g.strokeStyle='rgba(255,80,160,0.22)';g.lineWidth=Math.max(7,22*zoom);
+    // 30' wide driveway — outer edge
+    g.strokeStyle='rgba(255,80,160,0.18)';g.lineWidth=Math.max(10,30*zoom);
     g.lineCap='round';g.lineJoin='round';
     g.beginPath();
     for(var i=0;i<drvPts.length;i++){var p=pr(drvPts[i].nx,drvPts[i].ny,drvPts[i].e);if(i===0)g.moveTo(p.x,p.y);else g.lineTo(p.x,p.y);}
     g.stroke();
-    // Main
-    g.strokeStyle='rgba(255,80,160,0.5)';g.lineWidth=Math.max(4,15*zoom);
+    // Main surface
+    g.strokeStyle='rgba(255,80,160,0.45)';g.lineWidth=Math.max(7,24*zoom);
     g.beginPath();
     for(var i=0;i<drvPts.length;i++){var p=pr(drvPts[i].nx,drvPts[i].ny,drvPts[i].e);if(i===0)g.moveTo(p.x,p.y);else g.lineTo(p.x,p.y);}
     g.stroke();
@@ -981,7 +1025,7 @@ function draw() {
       lb('● ARRIVAL (875\')', 0.48, 0.43, 6, '#ffaa44', 8);
       lb('S-CURVE DRIVEWAY', 0.68, 0.18, 5, '#ff99cc', 8);
       lb('~420\' · ~15% GRADE', 0.68, 0.21, 3, '#ff99cc', 7);
-      lb('20\' WIDE', 0.68, 0.24, 2, 'rgba(255,153,204,0.5)', 7);
+      lb('30\' WIDE · GRADED TURNS', 0.68, 0.24, 2, 'rgba(255,153,204,0.5)', 7);
     }
     
     // Spot elevations along the climb and descent
