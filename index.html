@@ -229,19 +229,34 @@ function el(nx, ny) {
 }
 
 // ── S-CURVE DRIVEWAY ──
-// Climbs from street (820') up 60' to house (880') over ~520' path
-// S-curve: sweeps east first, then west to arrive at house
+// Entry: west third of frontage (~100' from W corner = nx ~0.27)
+// Per survey: enters from road, curves right (east/SE), then sweeps
+// back toward center to motor court at house (nx ~0.48, ny ~0.42)
 function driveway(n) {
   var pts = [];
+  // Entry point: nx=0.27 (western third), ny=0.025 (at road)
+  // Arrival: nx=0.48 (centered at house), ny=0.42
+  var startX = 0.27, startY = 0.025;
+  var endX = 0.48, endY = 0.42;
+  
   for (var i = 0; i <= n; i++) {
     var t = i / n;
-    // ny: 0.025 (street) → 0.42 (motor court at house)
-    var ny = 0.025 + t * 0.395;
-    // S-curve: right first then left
-    var nx = 0.48;
-    nx += 0.28 * Math.sin(t * Math.PI) * (1 - t * 0.65);
-    nx -= 0.10 * Math.sin(t * 2 * Math.PI) * t * 0.8;
-    nx -= t * 0.03;
+    // ny: linear from road to house
+    var ny = startY + t * (endY - startY);
+    
+    // nx path: starts west (0.27), sweeps RIGHT (east) toward 0.65,
+    // then curves back LEFT (west) to arrive at center (0.48)
+    // Using cubic Bezier-like control:
+    //   P0 = 0.27 (entry, west third)
+    //   P1 = 0.30 (slight east drift early)
+    //   P2 = 0.68 (far east at mid-curve)
+    //   P3 = 0.48 (arrival at house center)
+    var u = 1 - t;
+    var nx = u*u*u * 0.27 
+           + 3*u*u*t * 0.32 
+           + 3*u*t*t * 0.68 
+           + t*t*t * 0.48;
+    
     nx = Math.max(0.08, Math.min(0.88, nx));
     pts.push({ nx: nx, ny: ny, e: el(nx, ny) });
   }
@@ -724,10 +739,10 @@ function draw() {
     lb('REAR BOUNDARY (840\')', 0.50, 0.95, 3, 'rgba(255,180,100,0.5)', 8);
     
     if (show.D) {
-      lb('● STREET ENTRY (820\')', 0.48, 0.03, 8, '#44ff66', 8);
-      lb('● ARRIVAL (880\')', 0.46, 0.43, 6, '#ffaa44', 8);
-      lb('S-CURVE DRIVEWAY', 0.68, 0.22, 5, '#ff99cc', 8);
-      lb('~520\' · 11.5% AVG GRADE', 0.68, 0.25, 3, '#ff99cc', 7);
+      lb('● ENTRY (820\')', 0.27, 0.03, 8, '#44ff66', 8);
+      lb('● ARRIVAL (880\')', 0.48, 0.43, 6, '#ffaa44', 8);
+      lb('S-CURVE DRIVEWAY', 0.62, 0.22, 5, '#ff99cc', 8);
+      lb('~520\' · 11.5% AVG GRADE', 0.62, 0.25, 3, '#ff99cc', 7);
     }
     
     // Spot elevations along the climb and descent
