@@ -287,9 +287,9 @@ function el(nx, ny) {
   // ── DRIVEWAY GRADING — flatten turning areas, 30' wide ──
   // S-curve waypoints (must match driveway function)
   var dwWP = [
-    {nx:0.32,ny:0.025}, {nx:0.35,ny:0.06}, {nx:0.50,ny:0.11},
-    {nx:0.65,ny:0.17}, {nx:0.58,ny:0.24}, {nx:0.38,ny:0.30},
-    {nx:0.35,ny:0.35}, {nx:0.42,ny:0.39}, {nx:0.48,ny:0.42}
+    {nx:0.65,ny:0.025}, {nx:0.68,ny:0.06}, {nx:0.70,ny:0.12},
+    {nx:0.65,ny:0.20}, {nx:0.55,ny:0.28}, {nx:0.48,ny:0.34},
+    {nx:0.48,ny:0.38}
   ];
   // Check distance to each waypoint — flatten within 15' radius (30' wide)
   var driveRadius = 15 / LW; // 15' each side = 30' total width
@@ -347,19 +347,17 @@ function el(nx, ny) {
 function driveway(n) {
   var pts = [];
   
-  // Driveway path per survey pink markup:
-  // Entry left-center, sweeps RIGHT (SW), S-curves back LEFT (SE),
-  // then final curve RIGHT to motor court at garage/house
+  // Driveway per pink markup on site plan:
+  // Entry from RIGHT side of street, single sweeping LEFT curve
+  // up to large PARKING AREA on south side of house
   var waypoints = [
-    { nx: 0.32, ny: 0.025 },  // 0: entry at road (left-center)
-    { nx: 0.35, ny: 0.06 },   // 1: heading south, slight right
-    { nx: 0.50, ny: 0.11 },   // 2: sweeping right (east)
-    { nx: 0.65, ny: 0.17 },   // 3: far right apex — 1st curve
-    { nx: 0.58, ny: 0.24 },   // 4: turning back left (west)
-    { nx: 0.38, ny: 0.30 },   // 5: sweeping left — 2nd curve apex
-    { nx: 0.35, ny: 0.35 },   // 6: heading back toward center
-    { nx: 0.42, ny: 0.39 },   // 7: final approach curving right
-    { nx: 0.48, ny: 0.42 },   // 8: motor court arrival (N side of house)
+    { nx: 0.65, ny: 0.025 },  // 0: entry at road (right side)
+    { nx: 0.68, ny: 0.06 },   // 1: heading in, slight right
+    { nx: 0.70, ny: 0.12 },   // 2: curving through trees
+    { nx: 0.65, ny: 0.20 },   // 3: starting to sweep left
+    { nx: 0.55, ny: 0.28 },   // 4: sweeping left (west)
+    { nx: 0.48, ny: 0.34 },   // 5: approaching house
+    { nx: 0.48, ny: 0.38 },   // 6: arriving at parking area (south of house)
   ];
   
   // Catmull-Rom spline through waypoints for smooth curve
@@ -819,8 +817,8 @@ function draw() {
     }
     g.closePath(); g.fill(); g.stroke();
     
-    // ── Pool (backyard, behind house on 875' pad, before retaining wall 1) ──
-    var poolCx=0.48, poolCy=0.55;
+    // ── Pool (upper-left / northwest, behind house, per site plan) ──
+    var poolCx=0.34, poolCy=0.52;
     var poolW=40/LW/2, poolD=20/LD/2;
     var deckW=60/LW/2, deckD=35/LD/2;
     var poolE2=el(poolCx,poolCy);
@@ -837,9 +835,9 @@ function draw() {
             pr(poolCx+poolW,poolCy+poolD,poolE2-0.3),pr(poolCx-poolW,poolCy+poolD,poolE2-0.3)];
     g.beginPath();g.moveTo(pl[0].x,pl[0].y);g.lineTo(pl[1].x,pl[1].y);g.lineTo(pl[2].x,pl[2].y);g.lineTo(pl[3].x,pl[3].y);g.closePath();g.fill();g.stroke();
     
-    // Motor court / garage area (front of house, uphill side)
-    var mcCx=0.48, mcCy=0.39;
-    var mcW=45/LW/2, mcD=25/LD/2;
+    // PARKING AREA — large, wraps south side of house (per pink markup)
+    var mcCx=0.48, mcCy=0.38;
+    var mcW=80/LW/2, mcD=35/LD/2;  // 80'×35' parking area
     var mcE=el(mcCx,mcCy);
     g.fillStyle='rgba(110,106,102,0.4)';g.strokeStyle='rgba(130,126,122,0.4)';g.lineWidth=0.8;
     var mc=[pr(mcCx-mcW,mcCy-mcD,mcE),pr(mcCx+mcW,mcCy-mcD,mcE),
@@ -902,7 +900,7 @@ function draw() {
     // Two 3-car garage buildings facing each other across a covered courtyard
     // Each garage: 36'×24' (3 bays × 24' deep). Courtyard between: 24' wide
     // Total footprint: 36' wide × (24+24+24) = 36'×72'
-    var grCx = 0.72, grCy = 0.44;
+    var grCx = 0.32, grCy = 0.38; // garage SW of house, between court and parking
     var bayW = 36/LW/2;     // half-width of each garage (36' total)
     var bayD = 24/LD/2;     // half-depth of each garage (24')
     var courtW = 24/LD/2;   // half-width of courtyard between (24')
@@ -1050,8 +1048,9 @@ function draw() {
       lbH("3-CAR GARAGE", grCx, southGarageCy, 16, '#ddddcc', 7);
       lbH("3+3 FACING", grCx, grCy, -2, 'rgba(200,200,190,0.35)', 6);
       
-      // Motor court
-      lbH("MOTOR COURT", mcCx, mcCy, 5, '#ccccaa', 7);
+      // Parking area
+      lbH("PARKING AREA", mcCx, mcCy, 5, '#ccccaa', 8);
+      lbH("80'×35'", mcCx, mcCy, -1, 'rgba(200,200,180,0.4)', 6);
     }
   }
 
@@ -1268,15 +1267,16 @@ function draw() {
     lb('60\' CLIMB ↑', 0.25, 0.20, 5, 'rgba(255,150,100,0.6)', 8);
     lb('GRADED PAD (875\')', 0.45, 0.45, 26, '#ffffff', 11);
     lb('7,000 SF FOOTPRINT · 10K SF 2-STORY', 0.45, 0.45, 20, 'rgba(255,255,255,0.55)', 7);
-    lb('↓ 40\' DROP TO REAR', 0.50, 0.70, 5, 'rgba(255,200,100,0.5)', 8);
+    lb('↓ DROP TO REAR', 0.50, 0.70, 5, 'rgba(255,200,100,0.5)', 8);
+    lb('LAWN', 0.75, 0.48, 5, 'rgba(180,220,140,0.6)', 9);
     lb('REAR BOUNDARY (840\')', 0.50, 0.95, 3, 'rgba(255,180,100,0.5)', 8);
     
     if (show.D) {
-      lb('● ENTRY (820\')', 0.32, 0.03, 8, '#44ff66', 8);
-      lb('● ARRIVAL (875\')', 0.48, 0.43, 6, '#ffaa44', 8);
-      lb('S-CURVE DRIVEWAY', 0.68, 0.18, 5, '#ff99cc', 8);
-      lb('~420\' · ~15% GRADE', 0.68, 0.21, 3, '#ff99cc', 7);
-      lb('30\' WIDE · GRADED TURNS', 0.68, 0.24, 2, 'rgba(255,153,204,0.5)', 7);
+      lb('● ENTRY (820\')', 0.65, 0.03, 8, '#44ff66', 8);
+      lb('● PARKING (875\')', 0.48, 0.38, 6, '#ffaa44', 8);
+      lb('DRIVEWAY', 0.68, 0.15, 5, '#ff99cc', 8);
+      lb('SWEEPING CURVE', 0.68, 0.18, 3, '#ff99cc', 7);
+      lb('30\' WIDE', 0.68, 0.21, 2, 'rgba(255,153,204,0.5)', 7);
     }
     
     // Spot elevations along the climb and descent
