@@ -68,7 +68,7 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none}
 <div class="rw"><span class="lb">2-story total</span><span class="vl">~10,000 SF</span></div>
 <div class="rw"><span class="lb">Pool</span><span class="vl">Backyard (40'×20')</span></div>
 <div class="rw"><span class="lb">West side</span><span class="vl">Pickleball + Mini Golf</span></div>
-<div class="rw"><span class="lb">East side</span><span class="vl">6-Car Port (60'×24')</span></div>
+<div class="rw"><span class="lb">East side</span><span class="vl">6-Car Garage + Carport</span></div>
 
 <div class="sc">S-Curve Driveway</div>
 <div class="rw"><span class="lb">Rise</span><span class="vl">55 ft (820→875)</span></div>
@@ -896,52 +896,105 @@ function draw() {
       g.beginPath();g.moveTo(fp.x,fp.y-8*zoom);g.lineTo(fp.x+4*zoom,fp.y-6*zoom);g.lineTo(fp.x,fp.y-4*zoom);g.closePath();g.fill();
     }
     
-    // ── EAST SIDE: 6-Car Port ──
-    // 6 cars = ~60'×24' (3 bays deep × 2 rows, or 6 inline)
-    // Layout: 3×2 = 60' wide × 24' deep
-    var cpCx = 0.72, cpCy = 0.43;
-    var cpW = 60/LW/2, cpD = 24/LD/2;
-    var cpE = el(cpCx, cpCy);
-    var cpRoofH = 12;
-    var cpRoofE = cpE + cpRoofH / Math.max(exag, 0.3);
+    // ── EAST SIDE: 6-Car Garage + Carport ──
+    // Enclosed garage: 60'×30' (6 bays, 10' each × 30' deep)
+    // Carport extension: 60'×16' open-air covered area in front
+    var grCx = 0.72, grCy = 0.44;
+    var grW = 60/LW/2, grD = 30/LD/2;  // garage
+    var cpD2 = 16/LD;                    // carport depth (in front)
+    var grE = el(grCx, grCy);
+    var grWallH = 14;
+    var grWallE = grE + grWallH / Math.max(exag, 0.3);
+    var cpRoofH2 = 12;
+    var cpRoofE2 = grE + cpRoofH2 / Math.max(exag, 0.3);
     
+    // ── Enclosed Garage (rear section) ──
+    // Floor
+    g.fillStyle = 'rgba(90,90,90,0.45)';
+    g.strokeStyle = 'rgba(120,120,120,0.4)';
+    g.lineWidth = 0.8;
+    var gf = [pr(grCx-grW,grCy-grD,grE),pr(grCx+grW,grCy-grD,grE),
+              pr(grCx+grW,grCy+grD,grE),pr(grCx-grW,grCy+grD,grE)];
+    g.beginPath();g.moveTo(gf[0].x,gf[0].y);g.lineTo(gf[1].x,gf[1].y);
+    g.lineTo(gf[2].x,gf[2].y);g.lineTo(gf[3].x,gf[3].y);g.closePath();g.fill();g.stroke();
+    
+    // Garage walls (3 solid sides — rear, left, right)
+    var wallSegs = [
+      // Rear wall
+      [{nx:grCx-grW,ny:grCy+grD},{nx:grCx+grW,ny:grCy+grD}],
+      // Left wall
+      [{nx:grCx-grW,ny:grCy-grD},{nx:grCx-grW,ny:grCy+grD}],
+      // Right wall
+      [{nx:grCx+grW,ny:grCy-grD},{nx:grCx+grW,ny:grCy+grD}],
+    ];
+    for (var wi2=0;wi2<wallSegs.length;wi2++) {
+      var ws=wallSegs[wi2];
+      var wb0=pr(ws[0].nx,ws[0].ny,grE), wb1=pr(ws[1].nx,ws[1].ny,grE);
+      var wt0=pr(ws[0].nx,ws[0].ny,grWallE), wt1=pr(ws[1].nx,ws[1].ny,grWallE);
+      var shade = wi2===0 ? 0.5 : (wi2===1 ? 0.35 : 0.4);
+      g.fillStyle='rgba(195,190,185,'+shade+')';
+      g.strokeStyle='rgba(140,135,130,0.35)';
+      g.lineWidth=0.6;
+      g.beginPath();g.moveTo(wb0.x,wb0.y);g.lineTo(wb1.x,wb1.y);
+      g.lineTo(wt1.x,wt1.y);g.lineTo(wt0.x,wt0.y);g.closePath();g.fill();g.stroke();
+    }
+    
+    // Front wall with 6 garage door openings
+    var doorH = 10;
+    var doorE = grE + doorH / Math.max(exag, 0.3);
+    for (var di=0;di<6;di++) {
+      var dx0 = grCx - grW + di*(2*grW)/6 + 0.003;
+      var dx1 = grCx - grW + (di+1)*(2*grW)/6 - 0.003;
+      // Door opening (dark)
+      var db0=pr(dx0,grCy-grD,grE),db1=pr(dx1,grCy-grD,grE);
+      var dt0=pr(dx0,grCy-grD,doorE),dt1=pr(dx1,grCy-grD,doorE);
+      g.fillStyle='rgba(30,30,35,0.6)';
+      g.beginPath();g.moveTo(db0.x,db0.y);g.lineTo(db1.x,db1.y);
+      g.lineTo(dt1.x,dt1.y);g.lineTo(dt0.x,dt0.y);g.closePath();g.fill();
+      // Door frame
+      g.strokeStyle='rgba(160,155,150,0.5)';g.lineWidth=0.8;g.stroke();
+    }
+    // Wall above doors
+    var dfTop = pr(grCx-grW,grCy-grD,doorE), dfTop2 = pr(grCx+grW,grCy-grD,doorE);
+    var dfRoof = pr(grCx-grW,grCy-grD,grWallE), dfRoof2 = pr(grCx+grW,grCy-grD,grWallE);
+    g.fillStyle='rgba(195,190,185,0.45)';
+    g.beginPath();g.moveTo(dfTop.x,dfTop.y);g.lineTo(dfTop2.x,dfTop2.y);
+    g.lineTo(dfRoof2.x,dfRoof2.y);g.lineTo(dfRoof.x,dfRoof.y);g.closePath();g.fill();
+    
+    // Garage roof
+    g.fillStyle='rgba(170,165,160,0.5)';
+    g.strokeStyle='rgba(130,125,120,0.35)';
+    g.lineWidth=1;
+    var gr2 = [pr(grCx-grW-0.003,grCy-grD-0.003,grWallE),pr(grCx+grW+0.003,grCy-grD-0.003,grWallE),
+               pr(grCx+grW+0.003,grCy+grD+0.003,grWallE),pr(grCx-grW-0.003,grCy+grD+0.003,grWallE)];
+    g.beginPath();g.moveTo(gr2[0].x,gr2[0].y);g.lineTo(gr2[1].x,gr2[1].y);
+    g.lineTo(gr2[2].x,gr2[2].y);g.lineTo(gr2[3].x,gr2[3].y);g.closePath();g.fill();g.stroke();
+    
+    // ── Carport (open-air, in front of garage) ──
+    var cpNy = grCy - grD - cpD2; // carport front edge
     // Floor slab
-    g.fillStyle = 'rgba(100,100,100,0.4)';
-    g.strokeStyle = 'rgba(130,130,130,0.4)';
-    g.lineWidth = 0.8;
-    var cpFloor = [pr(cpCx-cpW,cpCy-cpD,cpE),pr(cpCx+cpW,cpCy-cpD,cpE),
-                   pr(cpCx+cpW,cpCy+cpD,cpE),pr(cpCx-cpW,cpCy+cpD,cpE)];
-    g.beginPath();g.moveTo(cpFloor[0].x,cpFloor[0].y);g.lineTo(cpFloor[1].x,cpFloor[1].y);
-    g.lineTo(cpFloor[2].x,cpFloor[2].y);g.lineTo(cpFloor[3].x,cpFloor[3].y);g.closePath();g.fill();g.stroke();
+    g.fillStyle='rgba(110,108,105,0.35)';
+    g.strokeStyle='rgba(130,128,125,0.3)';
+    var cf = [pr(grCx-grW,cpNy,grE),pr(grCx+grW,cpNy,grE),
+              pr(grCx+grW,grCy-grD,grE),pr(grCx-grW,grCy-grD,grE)];
+    g.beginPath();g.moveTo(cf[0].x,cf[0].y);g.lineTo(cf[1].x,cf[1].y);
+    g.lineTo(cf[2].x,cf[2].y);g.lineTo(cf[3].x,cf[3].y);g.closePath();g.fill();g.stroke();
     
-    // Support columns (6 columns along front edge)
-    var colW = 1.5/LW;
-    for (var ci = 0; ci < 6; ci++) {
-      var cx2 = cpCx - cpW + (2*ci+1) * cpW/3;
-      var colBot = pr(cx2, cpCy-cpD, cpE);
-      var colTop = pr(cx2, cpCy-cpD, cpRoofE);
-      g.strokeStyle = 'rgba(180,180,180,0.6)';
-      g.lineWidth = 2;
-      g.beginPath();g.moveTo(colBot.x,colBot.y);g.lineTo(colTop.x,colTop.y);g.stroke();
+    // Carport columns (4 across front)
+    for (var ci2=0;ci2<4;ci2++) {
+      var ccx = grCx - grW + (2*ci2+1) * grW/2;
+      var cBot = pr(ccx, cpNy, grE);
+      var cTop = pr(ccx, cpNy, cpRoofE2);
+      g.strokeStyle='rgba(180,175,170,0.6)';g.lineWidth=2.5;
+      g.beginPath();g.moveTo(cBot.x,cBot.y);g.lineTo(cTop.x,cTop.y);g.stroke();
     }
-    
-    // Roof
-    g.fillStyle = 'rgba(160,155,150,0.45)';
-    g.strokeStyle = 'rgba(120,115,110,0.4)';
-    g.lineWidth = 0.8;
-    var cpRoof = [pr(cpCx-cpW-0.005,cpCy-cpD-0.005,cpRoofE),pr(cpCx+cpW+0.005,cpCy-cpD-0.005,cpRoofE),
-                  pr(cpCx+cpW+0.005,cpCy+cpD+0.005,cpRoofE),pr(cpCx-cpW-0.005,cpCy+cpD+0.005,cpRoofE)];
-    g.beginPath();g.moveTo(cpRoof[0].x,cpRoof[0].y);g.lineTo(cpRoof[1].x,cpRoof[1].y);
-    g.lineTo(cpRoof[2].x,cpRoof[2].y);g.lineTo(cpRoof[3].x,cpRoof[3].y);g.closePath();g.fill();g.stroke();
-    
-    // Car bay lines (6 bays)
-    g.strokeStyle = 'rgba(255,255,255,0.2)';g.lineWidth = 0.5;
-    for (var bi = 1; bi < 6; bi++) {
-      var bx = cpCx - cpW + bi * (2*cpW)/6;
-      var bl1 = pr(bx, cpCy-cpD, cpE);
-      var bl2 = pr(bx, cpCy+cpD, cpE);
-      g.beginPath();g.moveTo(bl1.x,bl1.y);g.lineTo(bl2.x,bl2.y);g.stroke();
-    }
+    // Carport roof
+    g.fillStyle='rgba(155,150,145,0.35)';
+    g.strokeStyle='rgba(120,115,110,0.3)';g.lineWidth=0.8;
+    var cr = [pr(grCx-grW-0.005,cpNy-0.005,cpRoofE2),pr(grCx+grW+0.005,cpNy-0.005,cpRoofE2),
+              pr(grCx+grW+0.005,grCy-grD+0.003,cpRoofE2),pr(grCx-grW-0.005,grCy-grD+0.003,cpRoofE2)];
+    g.beginPath();g.moveTo(cr[0].x,cr[0].y);g.lineTo(cr[1].x,cr[1].y);
+    g.lineTo(cr[2].x,cr[2].y);g.lineTo(cr[3].x,cr[3].y);g.closePath();g.fill();g.stroke();
     
     // Dimension labels
     if (show.L) {
@@ -971,9 +1024,11 @@ function draw() {
       lbH("MINI GOLF", mgCx, mgCy, 8, '#88ee88', 7);
       lbH("PUTTING GREEN", mgCx, mgCy, 2, 'rgba(136,238,136,0.5)', 6);
       
-      // 6-Car Port
-      lbH("6-CAR PORT", cpCx, cpCy, 16, '#ddddcc', 8);
-      lbH("60'×24'", cpCx, cpCy, 10, 'rgba(200,200,190,0.5)', 6);
+      // 6-Car Garage + Carport
+      lbH("6-CAR GARAGE", grCx, grCy, 18, '#ddddcc', 8);
+      lbH("60'×30' ENCLOSED", grCx, grCy, 12, 'rgba(200,200,190,0.5)', 6);
+      lbH("CARPORT", grCx, grCy-grD-cpD2/2, 14, 'rgba(200,200,190,0.6)', 7);
+      lbH("60'×16' COVERED", grCx, grCy-grD-cpD2/2, 8, 'rgba(200,200,190,0.4)', 6);
       
       // Motor court
       lbH("MOTOR COURT", mcCx, mcCy, 5, '#ccccaa', 7);
