@@ -38,7 +38,10 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none}
 <canvas id="c"></canvas>
 
 <div class="pnl" id="info">
-<h1>1700 W Paces Ferry Rd NW</h1>
+<div style="display:flex;justify-content:space-between;align-items:center">
+<h1 style="margin:0">1700 W Paces Ferry Rd NW</h1>
+<button onclick="document.getElementById('info').style.display='none';document.getElementById('info-open').style.display='block'" style="background:none;border:none;color:#6a7d90;font-size:14px;cursor:pointer;padding:0 2px">✕</button>
+</div>
 <div class="sub">Meridian Geomatics Survey · Land Lot 126, 17th District · Fulton County GA</div>
 
 <div class="sc">Survey — Actual Data</div>
@@ -96,8 +99,13 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none}
 <div class="rw"><span class="lb">Status</span><span class="vl gn">NOT in flood zone</span></div>
 </div>
 
+<button id="info-open" class="pnl" onclick="document.getElementById('info').style.display='block';this.style.display='none'" style="display:none;top:8px;left:8px;cursor:pointer;font-size:9px;color:#4a9eff;padding:6px 10px">☰ Site Data</button>
+
 <div class="pnl" id="legend">
-<h2>Elevation Legend</h2>
+<div style="display:flex;justify-content:space-between;align-items:center">
+<h2 style="margin:0">Elevation Legend</h2>
+<button onclick="document.getElementById('legend').style.display='none';document.getElementById('legend-open').style.display='block'" style="background:none;border:none;color:#6a7d90;font-size:14px;cursor:pointer;padding:0 2px">✕</button>
+</div>
 <div class="leg-row"><div class="leg-swatch" style="background:#d4c855"></div>880 ft (natural ridge)</div>
 <div class="leg-row"><div class="leg-swatch" style="background:#c8b840"></div>875 ft (graded pad)</div>
 <div class="leg-row"><div class="leg-swatch" style="background:#b8c844"></div>870 ft</div>
@@ -117,6 +125,8 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none}
 <div class="leg-row"><div class="leg-swatch" style="background:rgba(160,180,200,0.25)"></div>2-ft minor contour</div>
 </div>
 </div>
+
+<button id="legend-open" class="pnl" onclick="document.getElementById('legend').style.display='block';this.style.display='none'" style="display:none;top:8px;right:50px;cursor:pointer;font-size:9px;color:#4a9eff;padding:6px 10px">☰ Legend</button>
 
 <div class="pnl" id="ctl">
 <span style="color:#4a9eff;font-size:9px">1:1 True Scale</span>
