@@ -68,7 +68,7 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none}
 <div class="rw"><span class="lb">2-story total</span><span class="vl">~10,000 SF</span></div>
 <div class="rw"><span class="lb">Pool</span><span class="vl">Backyard (40'×20')</span></div>
 <div class="rw"><span class="lb">West side</span><span class="vl">Pickleball + Mini Golf</span></div>
-<div class="rw"><span class="lb">East side</span><span class="vl">6-Car Garage + Carport</span></div>
+<div class="rw"><span class="lb">East side</span><span class="vl">3+3 Garage (facing) + Carport</span></div>
 
 <div class="sc">S-Curve Driveway</div>
 <div class="rw"><span class="lb">Rise</span><span class="vl">55 ft (820→875)</span></div>
@@ -287,9 +287,9 @@ function el(nx, ny) {
   // ── DRIVEWAY GRADING — flatten turning areas, 30' wide ──
   // S-curve waypoints (must match driveway function)
   var dwWP = [
-    {nx:0.27,ny:0.025}, {nx:0.30,ny:0.06}, {nx:0.55,ny:0.10},
-    {nx:0.72,ny:0.16}, {nx:0.62,ny:0.24}, {nx:0.32,ny:0.30},
-    {nx:0.35,ny:0.35}, {nx:0.48,ny:0.42}
+    {nx:0.32,ny:0.025}, {nx:0.35,ny:0.06}, {nx:0.50,ny:0.11},
+    {nx:0.65,ny:0.17}, {nx:0.58,ny:0.24}, {nx:0.38,ny:0.30},
+    {nx:0.35,ny:0.35}, {nx:0.42,ny:0.39}, {nx:0.48,ny:0.42}
   ];
   // Check distance to each waypoint — flatten within 15' radius (30' wide)
   var driveRadius = 15 / LW; // 15' each side = 30' total width
@@ -347,17 +347,19 @@ function el(nx, ny) {
 function driveway(n) {
   var pts = [];
   
-  // Define waypoints for a proper S-curve that elongates the path
-  // to keep grade around 15%. 7 control points for smooth S.
+  // Driveway path per survey pink markup:
+  // Entry left-center, sweeps RIGHT (SW), S-curves back LEFT (SE),
+  // then final curve RIGHT to motor court at garage/house
   var waypoints = [
-    { nx: 0.27, ny: 0.025 },  // 0: entry at road (west third)
-    { nx: 0.30, ny: 0.06 },   // 1: heading slightly east
-    { nx: 0.55, ny: 0.10 },   // 2: first curve - swinging east
-    { nx: 0.72, ny: 0.16 },   // 3: far east apex of first curve
-    { nx: 0.62, ny: 0.24 },   // 4: turning back west
-    { nx: 0.32, ny: 0.30 },   // 5: far west apex of second curve
-    { nx: 0.35, ny: 0.35 },   // 6: heading back east
-    { nx: 0.48, ny: 0.42 },   // 7: arrival at motor court
+    { nx: 0.32, ny: 0.025 },  // 0: entry at road (left-center)
+    { nx: 0.35, ny: 0.06 },   // 1: heading south, slight right
+    { nx: 0.50, ny: 0.11 },   // 2: sweeping right (east)
+    { nx: 0.65, ny: 0.17 },   // 3: far right apex — 1st curve
+    { nx: 0.58, ny: 0.24 },   // 4: turning back left (west)
+    { nx: 0.38, ny: 0.30 },   // 5: sweeping left — 2nd curve apex
+    { nx: 0.35, ny: 0.35 },   // 6: heading back toward center
+    { nx: 0.42, ny: 0.39 },   // 7: final approach curving right
+    { nx: 0.48, ny: 0.42 },   // 8: motor court arrival (N side of house)
   ];
   
   // Catmull-Rom spline through waypoints for smooth curve
@@ -846,7 +848,7 @@ function draw() {
     
     // ── WEST SIDE: Pickleball Court + Mini Golf ──
     // Pickleball: 44'×20' (playing area) + buffer = 60'×30' total
-    var pkCx = 0.22, pkCy = 0.44;
+    var pkCx = 0.16, pkCy = 0.44; // shifted 20' west
     var pkW = 30/LW/2, pkD = 60/LD/2;
     var pkE = el(pkCx, pkCy);
     // Court surface
@@ -871,7 +873,7 @@ function draw() {
     g.setLineDash([]);
     
     // Mini Golf: south of pickleball (irregular green shape)
-    var mgCx = 0.20, mgCy = 0.54;
+    var mgCx = 0.14, mgCy = 0.54; // shifted west with pickleball
     var mgW = 35/LW/2, mgD = 40/LD/2;
     var mgE = el(mgCx, mgCy);
     // Putting green shape (rounded)
@@ -896,105 +898,122 @@ function draw() {
       g.beginPath();g.moveTo(fp.x,fp.y-8*zoom);g.lineTo(fp.x+4*zoom,fp.y-6*zoom);g.lineTo(fp.x,fp.y-4*zoom);g.closePath();g.fill();
     }
     
-    // ── EAST SIDE: 6-Car Garage + Carport ──
-    // Enclosed garage: 60'×30' (6 bays, 10' each × 30' deep)
-    // Carport extension: 60'×16' open-air covered area in front
+    // ── EAST SIDE: 3+3 Garage (facing each other) + Carport courtyard ──
+    // Two 3-car garage buildings facing each other across a covered courtyard
+    // Each garage: 36'×24' (3 bays × 24' deep). Courtyard between: 24' wide
+    // Total footprint: 36' wide × (24+24+24) = 36'×72'
     var grCx = 0.72, grCy = 0.44;
-    var grW = 60/LW/2, grD = 30/LD/2;  // garage
-    var cpD2 = 16/LD;                    // carport depth (in front)
+    var bayW = 36/LW/2;     // half-width of each garage (36' total)
+    var bayD = 24/LD/2;     // half-depth of each garage (24')
+    var courtW = 24/LD/2;   // half-width of courtyard between (24')
     var grE = el(grCx, grCy);
-    var grWallH = 14;
+    var grWallH = 13;
     var grWallE = grE + grWallH / Math.max(exag, 0.3);
-    var cpRoofH2 = 12;
-    var cpRoofE2 = grE + cpRoofH2 / Math.max(exag, 0.3);
+    var doorH = 9;
+    var doorE2 = grE + doorH / Math.max(exag, 0.3);
     
-    // ── Enclosed Garage (rear section) ──
-    // Floor
-    g.fillStyle = 'rgba(90,90,90,0.45)';
-    g.strokeStyle = 'rgba(120,120,120,0.4)';
-    g.lineWidth = 0.8;
-    var gf = [pr(grCx-grW,grCy-grD,grE),pr(grCx+grW,grCy-grD,grE),
-              pr(grCx+grW,grCy+grD,grE),pr(grCx-grW,grCy+grD,grE)];
-    g.beginPath();g.moveTo(gf[0].x,gf[0].y);g.lineTo(gf[1].x,gf[1].y);
-    g.lineTo(gf[2].x,gf[2].y);g.lineTo(gf[3].x,gf[3].y);g.closePath();g.fill();g.stroke();
-    
-    // Garage walls (3 solid sides — rear, left, right)
-    var wallSegs = [
-      // Rear wall
-      [{nx:grCx-grW,ny:grCy+grD},{nx:grCx+grW,ny:grCy+grD}],
-      // Left wall
-      [{nx:grCx-grW,ny:grCy-grD},{nx:grCx-grW,ny:grCy+grD}],
-      // Right wall
-      [{nx:grCx+grW,ny:grCy-grD},{nx:grCx+grW,ny:grCy+grD}],
-    ];
-    for (var wi2=0;wi2<wallSegs.length;wi2++) {
-      var ws=wallSegs[wi2];
-      var wb0=pr(ws[0].nx,ws[0].ny,grE), wb1=pr(ws[1].nx,ws[1].ny,grE);
-      var wt0=pr(ws[0].nx,ws[0].ny,grWallE), wt1=pr(ws[1].nx,ws[1].ny,grWallE);
-      var shade = wi2===0 ? 0.5 : (wi2===1 ? 0.35 : 0.4);
-      g.fillStyle='rgba(195,190,185,'+shade+')';
-      g.strokeStyle='rgba(140,135,130,0.35)';
-      g.lineWidth=0.6;
-      g.beginPath();g.moveTo(wb0.x,wb0.y);g.lineTo(wb1.x,wb1.y);
-      g.lineTo(wt1.x,wt1.y);g.lineTo(wt0.x,wt0.y);g.closePath();g.fill();g.stroke();
+    // Helper: draw a 3-car garage box
+    function drawGarageBlock(cx, cyCenter, doorSide, label) {
+      var nyTop = cyCenter - bayD;
+      var nyBot = cyCenter + bayD;
+      
+      // Floor
+      g.fillStyle='rgba(90,90,90,0.4)';
+      g.strokeStyle='rgba(120,120,120,0.35)';
+      g.lineWidth=0.7;
+      var fl=[pr(cx-bayW,nyTop,grE),pr(cx+bayW,nyTop,grE),
+              pr(cx+bayW,nyBot,grE),pr(cx-bayW,nyBot,grE)];
+      g.beginPath();g.moveTo(fl[0].x,fl[0].y);g.lineTo(fl[1].x,fl[1].y);
+      g.lineTo(fl[2].x,fl[2].y);g.lineTo(fl[3].x,fl[3].y);g.closePath();g.fill();g.stroke();
+      
+      // 3 solid walls
+      var walls = [
+        [{nx:cx-bayW,ny:nyTop},{nx:cx+bayW,ny:nyTop}],   // far wall
+        [{nx:cx-bayW,ny:nyTop},{nx:cx-bayW,ny:nyBot}],    // left
+        [{nx:cx+bayW,ny:nyTop},{nx:cx+bayW,ny:nyBot}],    // right
+      ];
+      // Adjust: door side wall becomes the door face
+      if (doorSide === 'south') walls[0] = [{nx:cx-bayW,ny:nyTop},{nx:cx+bayW,ny:nyTop}]; // back wall = north
+      if (doorSide === 'north') walls[0] = [{nx:cx-bayW,ny:nyBot},{nx:cx+bayW,ny:nyBot}]; // back wall = south
+      
+      for (var w=0;w<walls.length;w++) {
+        var ws=walls[w];
+        var b0=pr(ws[0].nx,ws[0].ny,grE),b1=pr(ws[1].nx,ws[1].ny,grE);
+        var t0=pr(ws[0].nx,ws[0].ny,grWallE),t1=pr(ws[1].nx,ws[1].ny,grWallE);
+        var sh = w===0?0.5:(w===1?0.35:0.4);
+        g.fillStyle='rgba(195,190,185,'+sh+')';
+        g.strokeStyle='rgba(140,135,130,0.3)';g.lineWidth=0.5;
+        g.beginPath();g.moveTo(b0.x,b0.y);g.lineTo(b1.x,b1.y);
+        g.lineTo(t1.x,t1.y);g.lineTo(t0.x,t0.y);g.closePath();g.fill();g.stroke();
+      }
+      
+      // 3 garage door openings on door side
+      var doorNy = (doorSide === 'south') ? nyBot : nyTop;
+      for (var d=0;d<3;d++) {
+        var dx0=cx-bayW+d*(2*bayW)/3+0.002;
+        var dx1=cx-bayW+(d+1)*(2*bayW)/3-0.002;
+        var db0=pr(dx0,doorNy,grE),db1=pr(dx1,doorNy,grE);
+        var dt0=pr(dx0,doorNy,doorE2),dt1=pr(dx1,doorNy,doorE2);
+        g.fillStyle='rgba(30,30,35,0.55)';
+        g.beginPath();g.moveTo(db0.x,db0.y);g.lineTo(db1.x,db1.y);
+        g.lineTo(dt1.x,dt1.y);g.lineTo(dt0.x,dt0.y);g.closePath();g.fill();
+        g.strokeStyle='rgba(160,155,150,0.45)';g.lineWidth=0.7;g.stroke();
+      }
+      // Wall above doors
+      var dta=pr(cx-bayW,doorNy,doorE2),dtb=pr(cx+bayW,doorNy,doorE2);
+      var dra=pr(cx-bayW,doorNy,grWallE),drb=pr(cx+bayW,doorNy,grWallE);
+      g.fillStyle='rgba(195,190,185,0.4)';
+      g.beginPath();g.moveTo(dta.x,dta.y);g.lineTo(dtb.x,dtb.y);
+      g.lineTo(drb.x,drb.y);g.lineTo(dra.x,dra.y);g.closePath();g.fill();
+      
+      // Roof
+      g.fillStyle='rgba(170,165,160,0.45)';
+      g.strokeStyle='rgba(130,125,120,0.3)';g.lineWidth=0.8;
+      var rf=[pr(cx-bayW-0.003,nyTop-0.003,grWallE),pr(cx+bayW+0.003,nyTop-0.003,grWallE),
+              pr(cx+bayW+0.003,nyBot+0.003,grWallE),pr(cx-bayW-0.003,nyBot+0.003,grWallE)];
+      g.beginPath();g.moveTo(rf[0].x,rf[0].y);g.lineTo(rf[1].x,rf[1].y);
+      g.lineTo(rf[2].x,rf[2].y);g.lineTo(rf[3].x,rf[3].y);g.closePath();g.fill();g.stroke();
     }
     
-    // Front wall with 6 garage door openings
-    var doorH = 10;
-    var doorE = grE + doorH / Math.max(exag, 0.3);
-    for (var di=0;di<6;di++) {
-      var dx0 = grCx - grW + di*(2*grW)/6 + 0.003;
-      var dx1 = grCx - grW + (di+1)*(2*grW)/6 - 0.003;
-      // Door opening (dark)
-      var db0=pr(dx0,grCy-grD,grE),db1=pr(dx1,grCy-grD,grE);
-      var dt0=pr(dx0,grCy-grD,doorE),dt1=pr(dx1,grCy-grD,doorE);
-      g.fillStyle='rgba(30,30,35,0.6)';
-      g.beginPath();g.moveTo(db0.x,db0.y);g.lineTo(db1.x,db1.y);
-      g.lineTo(dt1.x,dt1.y);g.lineTo(dt0.x,dt0.y);g.closePath();g.fill();
-      // Door frame
-      g.strokeStyle='rgba(160,155,150,0.5)';g.lineWidth=0.8;g.stroke();
-    }
-    // Wall above doors
-    var dfTop = pr(grCx-grW,grCy-grD,doorE), dfTop2 = pr(grCx+grW,grCy-grD,doorE);
-    var dfRoof = pr(grCx-grW,grCy-grD,grWallE), dfRoof2 = pr(grCx+grW,grCy-grD,grWallE);
-    g.fillStyle='rgba(195,190,185,0.45)';
-    g.beginPath();g.moveTo(dfTop.x,dfTop.y);g.lineTo(dfTop2.x,dfTop2.y);
-    g.lineTo(dfRoof2.x,dfRoof2.y);g.lineTo(dfRoof.x,dfRoof.y);g.closePath();g.fill();
+    // North garage block — doors face SOUTH (toward courtyard)
+    var northGarageCy = grCy - courtW - bayD;
+    drawGarageBlock(grCx, northGarageCy, 'south');
     
-    // Garage roof
-    g.fillStyle='rgba(170,165,160,0.5)';
-    g.strokeStyle='rgba(130,125,120,0.35)';
-    g.lineWidth=1;
-    var gr2 = [pr(grCx-grW-0.003,grCy-grD-0.003,grWallE),pr(grCx+grW+0.003,grCy-grD-0.003,grWallE),
-               pr(grCx+grW+0.003,grCy+grD+0.003,grWallE),pr(grCx-grW-0.003,grCy+grD+0.003,grWallE)];
-    g.beginPath();g.moveTo(gr2[0].x,gr2[0].y);g.lineTo(gr2[1].x,gr2[1].y);
-    g.lineTo(gr2[2].x,gr2[2].y);g.lineTo(gr2[3].x,gr2[3].y);g.closePath();g.fill();g.stroke();
+    // South garage block — doors face NORTH (toward courtyard)
+    var southGarageCy = grCy + courtW + bayD;
+    drawGarageBlock(grCx, southGarageCy, 'north');
     
-    // ── Carport (open-air, in front of garage) ──
-    var cpNy = grCy - grD - cpD2; // carport front edge
-    // Floor slab
+    // Courtyard floor between garages (covered carport area)
+    var courtNyTop = northGarageCy + bayD;
+    var courtNyBot = southGarageCy - bayD;
     g.fillStyle='rgba(110,108,105,0.35)';
-    g.strokeStyle='rgba(130,128,125,0.3)';
-    var cf = [pr(grCx-grW,cpNy,grE),pr(grCx+grW,cpNy,grE),
-              pr(grCx+grW,grCy-grD,grE),pr(grCx-grW,grCy-grD,grE)];
+    g.strokeStyle='rgba(130,128,125,0.25)';g.lineWidth=0.6;
+    var cf=[pr(grCx-bayW,courtNyTop,grE),pr(grCx+bayW,courtNyTop,grE),
+            pr(grCx+bayW,courtNyBot,grE),pr(grCx-bayW,courtNyBot,grE)];
     g.beginPath();g.moveTo(cf[0].x,cf[0].y);g.lineTo(cf[1].x,cf[1].y);
     g.lineTo(cf[2].x,cf[2].y);g.lineTo(cf[3].x,cf[3].y);g.closePath();g.fill();g.stroke();
     
-    // Carport columns (4 across front)
-    for (var ci2=0;ci2<4;ci2++) {
-      var ccx = grCx - grW + (2*ci2+1) * grW/2;
-      var cBot = pr(ccx, cpNy, grE);
-      var cTop = pr(ccx, cpNy, cpRoofE2);
-      g.strokeStyle='rgba(180,175,170,0.6)';g.lineWidth=2.5;
-      g.beginPath();g.moveTo(cBot.x,cBot.y);g.lineTo(cTop.x,cTop.y);g.stroke();
+    // Carport roof over courtyard
+    var cpRoofH3 = 11;
+    var cpRoofE3 = grE + cpRoofH3 / Math.max(exag, 0.3);
+    // Columns (4 at courtyard edges)
+    var colPositions = [
+      {nx:grCx-bayW,ny:courtNyTop},{nx:grCx+bayW,ny:courtNyTop},
+      {nx:grCx-bayW,ny:courtNyBot},{nx:grCx+bayW,ny:courtNyBot}
+    ];
+    for (var cp2=0;cp2<colPositions.length;cp2++) {
+      var cpos=colPositions[cp2];
+      var cb=pr(cpos.nx,cpos.ny,grE),ct=pr(cpos.nx,cpos.ny,cpRoofE3);
+      g.strokeStyle='rgba(180,175,170,0.5)';g.lineWidth=2.5;
+      g.beginPath();g.moveTo(cb.x,cb.y);g.lineTo(ct.x,ct.y);g.stroke();
     }
-    // Carport roof
-    g.fillStyle='rgba(155,150,145,0.35)';
-    g.strokeStyle='rgba(120,115,110,0.3)';g.lineWidth=0.8;
-    var cr = [pr(grCx-grW-0.005,cpNy-0.005,cpRoofE2),pr(grCx+grW+0.005,cpNy-0.005,cpRoofE2),
-              pr(grCx+grW+0.005,grCy-grD+0.003,cpRoofE2),pr(grCx-grW-0.005,grCy-grD+0.003,cpRoofE2)];
-    g.beginPath();g.moveTo(cr[0].x,cr[0].y);g.lineTo(cr[1].x,cr[1].y);
-    g.lineTo(cr[2].x,cr[2].y);g.lineTo(cr[3].x,cr[3].y);g.closePath();g.fill();g.stroke();
+    // Roof
+    g.fillStyle='rgba(155,150,145,0.3)';
+    g.strokeStyle='rgba(120,115,110,0.25)';g.lineWidth=0.6;
+    var crf=[pr(grCx-bayW-0.004,courtNyTop-0.003,cpRoofE3),pr(grCx+bayW+0.004,courtNyTop-0.003,cpRoofE3),
+             pr(grCx+bayW+0.004,courtNyBot+0.003,cpRoofE3),pr(grCx-bayW-0.004,courtNyBot+0.003,cpRoofE3)];
+    g.beginPath();g.moveTo(crf[0].x,crf[0].y);g.lineTo(crf[1].x,crf[1].y);
+    g.lineTo(crf[2].x,crf[2].y);g.lineTo(crf[3].x,crf[3].y);g.closePath();g.fill();g.stroke();
     
     // Dimension labels
     if (show.L) {
@@ -1024,11 +1043,12 @@ function draw() {
       lbH("MINI GOLF", mgCx, mgCy, 8, '#88ee88', 7);
       lbH("PUTTING GREEN", mgCx, mgCy, 2, 'rgba(136,238,136,0.5)', 6);
       
-      // 6-Car Garage + Carport
-      lbH("6-CAR GARAGE", grCx, grCy, 18, '#ddddcc', 8);
-      lbH("60'×30' ENCLOSED", grCx, grCy, 12, 'rgba(200,200,190,0.5)', 6);
-      lbH("CARPORT", grCx, grCy-grD-cpD2/2, 14, 'rgba(200,200,190,0.6)', 7);
-      lbH("60'×16' COVERED", grCx, grCy-grD-cpD2/2, 8, 'rgba(200,200,190,0.4)', 6);
+      // 3+3 Garage
+      lbH("3-CAR GARAGE", grCx, northGarageCy, 16, '#ddddcc', 7);
+      lbH("COURTYARD", grCx, grCy, 14, 'rgba(200,200,190,0.6)', 7);
+      lbH("CARPORT", grCx, grCy, 8, 'rgba(200,200,190,0.4)', 6);
+      lbH("3-CAR GARAGE", grCx, southGarageCy, 16, '#ddddcc', 7);
+      lbH("3+3 FACING", grCx, grCy, -2, 'rgba(200,200,190,0.35)', 6);
       
       // Motor court
       lbH("MOTOR COURT", mcCx, mcCy, 5, '#ccccaa', 7);
@@ -1252,7 +1272,7 @@ function draw() {
     lb('REAR BOUNDARY (840\')', 0.50, 0.95, 3, 'rgba(255,180,100,0.5)', 8);
     
     if (show.D) {
-      lb('● ENTRY (820\')', 0.27, 0.03, 8, '#44ff66', 8);
+      lb('● ENTRY (820\')', 0.32, 0.03, 8, '#44ff66', 8);
       lb('● ARRIVAL (875\')', 0.48, 0.43, 6, '#ffaa44', 8);
       lb('S-CURVE DRIVEWAY', 0.68, 0.18, 5, '#ff99cc', 8);
       lb('~420\' · ~15% GRADE', 0.68, 0.21, 3, '#ff99cc', 7);
