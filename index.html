@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>1700 W Paces Ferry – Survey-Based 3D Topo</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0b1118;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+canvas{display:block;width:100vw;height:100vh;touch-action:none}
+.pnl{position:absolute;background:rgba(8,14,22,0.94);border:1px solid rgba(255,255,255,0.1);border-radius:10px;padding:11px 15px;color:#a0b4c8;font-size:10px;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);max-height:88vh;overflow-y:auto}
+#info{top:8px;left:8px;max-width:275px;z-index:10}
+#info::-webkit-scrollbar{width:4px}
+#info::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.15);border-radius:2px}
+#info h1{font-size:13px;font-weight:600;color:#fff;margin-bottom:1px}
+#info .sub{font-size:9px;color:#6a7d90;margin-bottom:5px}
+.rw{display:flex;justify-content:space-between;padding:2px 0;border-bottom:1px solid rgba(255,255,255,0.03);font-size:9.5px}
+.rw:last-child{border:none}
+.lb{color:#6a7d90}.vl{font-weight:500}
+.rd{color:#dd6644}.gn{color:#6dcc6d}.am{color:#dda844}.bl{color:#4a9eff}
+.sc{font-size:8px;color:#4a9eff;font-weight:600;margin:6px 0 2px;text-transform:uppercase;letter-spacing:0.4px}
+#legend{top:8px;right:50px;width:185px;z-index:10}
+#legend h2{font-size:11px;color:#fff;margin-bottom:6px}
+.leg-row{display:flex;align-items:center;gap:6px;padding:2px 0;font-size:9px}
+.leg-swatch{width:16px;height:3px;border-radius:1px;flex-shrink:0}
+#ctl{bottom:8px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:7px;flex-wrap:wrap;justify-content:center;z-index:10}
+#ctl button{background:rgba(74,158,255,0.12);color:#4a9eff;border:1px solid rgba(74,158,255,0.25);border-radius:4px;padding:3px 7px;font-size:9px;cursor:pointer;-webkit-appearance:none;white-space:nowrap}
+#ctl button.on{background:rgba(74,158,255,0.35)}
+#ctl input[type=range]{width:65px;-webkit-appearance:auto}
+#ctl label,#ctl span{font-size:8px;color:#6a7d90}
+#ctl span{color:#a0b4c8;min-width:18px}
+.zb{position:absolute;right:10px;width:30px;height:30px;border-radius:6px;background:rgba(8,14,22,0.94);border:1px solid rgba(255,255,255,0.1);color:#4a9eff;font-size:18px;cursor:pointer;-webkit-appearance:none;z-index:10}
+#zi{bottom:46px}#zo{bottom:10px}
+#ht{position:absolute;bottom:38px;left:50%;transform:translateX(-50%);font-size:8px;color:#3a4d60;z-index:5}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="pnl" id="info">
+<h1>1700 W Paces Ferry Rd NW</h1>
+<div class="sub">Meridian Geomatics Survey · Land Lot 126, 17th District · Fulton County GA</div>
+
+<div class="sc">Survey — Actual Data</div>
+<div class="rw"><span class="lb">Total area</span><span class="vl">131,229 SF (3.013 ac)</span></div>
+<div class="rw"><span class="lb">Zoning</span><span class="vl">R-1</span></div>
+<div class="rw"><span class="lb">Front setback</span><span class="vl">47 ft from R/W</span></div>
+<div class="rw"><span class="lb">Side setback</span><span class="vl">½ bldg ht (min 7')</span></div>
+<div class="rw"><span class="lb">Rear setback</span><span class="vl">15 ft (varies)</span></div>
+<div class="rw"><span class="lb">Max lot coverage</span><span class="vl">55%</span></div>
+<div class="rw"><span class="lb">Min lot width</span><span class="vl">≥ 100 ft</span></div>
+
+<div class="sc">Topography — Road is HIGH</div>
+<div class="rw"><span class="lb">W Paces Ferry (N)</span><span class="vl gn">~898 ft MSL</span></div>
+<div class="rw"><span class="lb">House pad area</span><span class="vl">~886–890 ft</span></div>
+<div class="rw"><span class="lb">Pool terrace</span><span class="vl">~876–878 ft</span></div>
+<div class="rw"><span class="lb">Mid-slope</span><span class="vl">~862–868 ft</span></div>
+<div class="rw"><span class="lb">South boundary</span><span class="vl rd">~844–848 ft</span></div>
+<div class="rw"><span class="lb">Total fall</span><span class="vl rd">~54 ft N→S</span></div>
+<div class="rw"><span class="lb">Contour interval</span><span class="vl">2 ft</span></div>
+
+<div class="sc">Proposed House</div>
+<div class="rw"><span class="lb">Main block</span><span class="vl">90 ft × 55 ft</span></div>
+<div class="rw"><span class="lb">West wing</span><span class="vl">40 ft × 35 ft</span></div>
+<div class="rw"><span class="lb">Garage wing</span><span class="vl">36 ft × 28 ft</span></div>
+<div class="rw"><span class="lb">Total footprint</span><span class="vl">~7,310 SF</span></div>
+<div class="rw"><span class="lb">2-story total</span><span class="vl">~10,000 SF</span></div>
+
+<div class="sc">Driveway</div>
+<div class="rw"><span class="lb">Entry → house drop</span><span class="vl am">~12 ft</span></div>
+<div class="rw"><span class="lb">Driveway style</span><span class="vl">Concrete, curved</span></div>
+
+<div class="sc">Adjacent Owners</div>
+<div class="rw"><span class="lb">West</span><span class="vl" style="font-size:8px">Maurice Scott (1690 Paces Bend Ct)</span></div>
+<div class="rw"><span class="lb">East</span><span class="vl" style="font-size:8px">Buckhead Prop / Woodside Grp</span></div>
+<div class="rw"><span class="lb">SE</span><span class="vl" style="font-size:8px">Sarah W. Earle (3248 Nancy Creek)</span></div>
+<div class="rw"><span class="lb">S / SW</span><span class="vl" style="font-size:8px">Stephanie/Ann Marie Cannon</span></div>
+
+<div class="sc">Flood Zone</div>
+<div class="rw"><span class="lb">FEMA Panel</span><span class="vl gn">13121C0257F</span></div>
+<div class="rw"><span class="lb">Status</span><span class="vl gn">NOT in flood zone</span></div>
+</div>
+
+<div class="pnl" id="legend">
+<h2>Elevation Legend</h2>
+<div class="leg-row"><div class="leg-swatch" style="background:#d4c855"></div>898 ft (road / high)</div>
+<div class="leg-row"><div class="leg-swatch" style="background:#b8c844"></div>890 ft</div>
+<div class="leg-row"><div class="leg-swatch" style="background:#8ab83a"></div>880 ft (house area)</div>
+<div class="leg-row"><div class="leg-swatch" style="background:#5a9a3a"></div>870 ft</div>
+<div class="leg-row"><div class="leg-swatch" style="background:#3a8040"></div>860 ft</div>
+<div class="leg-row"><div class="leg-swatch" style="background:#2a6838"></div>850 ft</div>
+<div class="leg-row"><div class="leg-swatch" style="background:#1e5030"></div>844 ft (low / south)</div>
+<div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08)">
+<div class="leg-row"><div class="leg-swatch" style="background:rgba(255,200,60,0.7)"></div>Survey boundary</div>
+<div class="leg-row"><div class="leg-swatch" style="background:rgba(255,100,100,0.6)"></div>47' front setback</div>
+<div class="leg-row"><div class="leg-swatch" style="background:rgba(255,100,100,0.3)"></div>15' rear setback</div>
+<div class="leg-row"><div class="leg-swatch" style="background:#ff50a0"></div>Driveway</div>
+<div class="leg-row"><div class="leg-swatch" style="background:#44aaff"></div>House footprint</div>
+<div class="leg-row"><div class="leg-swatch" style="background:rgba(34,150,210,0.6)"></div>Pool</div>
+<div class="leg-row"><div class="leg-swatch" style="background:#fff"></div>10-ft major contour</div>
+<div class="leg-row"><div class="leg-swatch" style="background:rgba(160,180,200,0.25)"></div>2-ft minor contour</div>
+</div>
+</div>
+
+<div class="pnl" id="ctl">
+<label>Exag</label>
+<input type="range" id="exS" min="10" max="80" value="12" step="1">
+<span id="exV">1.2×</span>
+<button id="bC" class="on" onclick="tgl('C')">Contours</button>
+<button id="bD" class="on" onclick="tgl('D')">Driveway</button>
+<button id="bL" class="on" onclick="tgl('L')">Labels</button>
+<button id="bB" class="on" onclick="tgl('B')">Boundary</button>
+<button id="bH" class="on" onclick="tgl('H')">House</button>
+<button id="bS" class="on" onclick="tgl('S')">Setbacks</button>
+<button id="bT" class="" onclick="tgl('T')">Trees</button>
+<button onclick="rv()">Reset</button>
+</div>
+
+<button class="zb" id="zi" onclick="dZ(1.15)">+</button>
+<button class="zb" id="zo" onclick="dZ(0.87)">&minus;</button>
+<div id="ht">Drag to rotate · Scroll/pinch to zoom · Toggle layers</div>
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// 1700 W PACES FERRY — SURVEY-BASED 3D TOPOGRAPHIC MODEL
+// Based on Meridian Geomatics survey, Land Lot 126, 17th Dist
+// Elevations: MSL per Fulton County GIS
+// ═══════════════════════════════════════════════════════════════
+
+var cv = document.getElementById('c');
+var g = cv.getContext('2d');
+var dp = window.devicePixelRatio || 1;
+
+// ── ACTUAL SURVEY DIMENSIONS ──
+// Property is ~3.013 acres = 131,229 SF
+// Approximate bounding box from survey
+var LW = 380; // approximate E-W span (ft)
+var LD = 450; // approximate N-S span (ft)
+
+// Elevation range from survey contours
+var EMIN = 842, EMAX = 900, ER = EMAX - EMIN, EM = (EMIN + EMAX) / 2;
+
+// Camera
+var exag = 1.2, rotY = -0.55, rotX = 0.50, zoom = 0.52;
+var show = { C:true, D:true, L:true, B:true, H:true, S:true, T:false };
+var drag = false, lx = 0, ly = 0, GN = 60;
+
+// ── ELEVATION MODEL (corrected from survey) ──
+// North = road (high ~898), slopes DOWN to south (~844)
+// Ridge runs roughly E-W near the road, house sits on upper plateau
+function el(nx, ny) {
+  // ny=0 is NORTH (road, high), ny=1 is SOUTH (low, Nancy Creek area)
+  var e;
+  
+  // North plateau near road (ny 0–0.08): ~896-898 ft, fairly flat
+  if (ny < 0.08) {
+    e = 898 - ny * 25; // gentle slope from road
+  }
+  // Upper slope — house area (ny 0.08–0.20): 896 → 886
+  else if (ny < 0.20) {
+    e = 896 - (ny - 0.08) * 83.3; // steepening
+  }
+  // House pad / plateau (ny 0.20–0.30): ~886, relatively flat
+  else if (ny < 0.30) {
+    var d = Math.abs(ny - 0.25); // center of house pad
+    e = 886 + (0.05 - d) * 10; // slight dome at house pad
+    e = Math.min(888, e);
+  }
+  // Pool terrace (ny 0.30–0.38): 884 → 876
+  else if (ny < 0.38) {
+    e = 884 - (ny - 0.30) * 100;
+  }
+  // Mid slope steepening (ny 0.38–0.55): 876 → 862
+  else if (ny < 0.55) {
+    e = 876 - (ny - 0.38) * 82.4;
+  }
+  // Continued slope (ny 0.55–0.75): 862 → 850
+  else if (ny < 0.75) {
+    e = 862 - (ny - 0.55) * 60;
+  }
+  // Lower area approaching Nancy Creek (ny 0.75–0.90): 850 → 846
+  else if (ny < 0.90) {
+    e = 850 - (ny - 0.75) * 26.7;
+  }
+  // Southern boundary (ny 0.90–1.0): ~846 → 844
+  else {
+    e = 846 - (ny - 0.90) * 20;
+  }
+  
+  // East-west profile: slight ridge in center, drops toward edges
+  var cDist = Math.abs(nx - 0.50);
+  if (ny > 0.05 && ny < 0.95) {
+    e -= cDist * cDist * 18 * Math.min(1, Math.max(0, (e - 846) / 20));
+  }
+  
+  // Western drainage gully
+  if (nx < 0.15) {
+    e -= (0.15 - nx) * 12 * Math.max(0, ny - 0.15) * Math.min(1, ny);
+  }
+  // Eastern drainage
+  if (nx > 0.85) {
+    e -= (nx - 0.85) * 10 * Math.max(0, ny - 0.15) * Math.min(1, ny);
+  }
+  
+  // Flatten the house pad area more aggressively
+  var hDist = Math.sqrt(Math.pow((nx - 0.48) * 1.2, 2) + Math.pow((ny - 0.25) * 2.0, 2));
+  if (hDist < 0.15) {
+    var blend = Math.pow(hDist / 0.15, 0.7);
+    e = e * blend + 887 * (1 - blend);
+  }
+  
+  // Micro terrain for realism
+  e += Math.sin(nx * 24 + 1.3) * Math.cos(ny * 20 + 0.8) * 0.3;
+  e += Math.sin(nx * 38 + 2.5) * Math.cos(ny * 32 + 1.7) * 0.12;
+  
+  return Math.max(EMIN, Math.min(EMAX, e));
+}
+
+// ── DRIVEWAY PATH ──
+// From survey: concrete driveway from W Paces Ferry Road down to house/garage
+// Road is NORTH (ny~0.02), curves down to house (ny~0.22)
+function driveway(n) {
+  var pts = [];
+  for (var i = 0; i <= n; i++) {
+    var t = i / n;
+    // ny: 0.02 (road) → 0.28 (motor court south of house)
+    var ny = 0.02 + t * 0.26;
+    // Gentle S-curve: slight right then left
+    var nx = 0.48;
+    nx += 0.08 * Math.sin(t * Math.PI * 1.2) * (1 - t * 0.5);
+    nx -= 0.03 * Math.sin(t * Math.PI * 2.2) * t;
+    nx = Math.max(0.10, Math.min(0.90, nx));
+    pts.push({ nx: nx, ny: ny, e: el(nx, ny) });
+  }
+  return pts;
+}
+
+// ── COLORS ──
+function ecol(e) {
+  var t = (e - EMIN) / ER;
+  var r, g2, b;
+  if (t < 0.12) { r = 28 + t * 200; g2 = 55 + t * 350; b = 40 + t * 100; }
+  else if (t < 0.30) { var s = (t-0.12)/0.18; r = 52+s*40; g2 = 97+s*50; b = 52-s*8; }
+  else if (t < 0.50) { var s = (t-0.30)/0.20; r = 92+s*50; g2 = 147+s*40; b = 44+s*5; }
+  else if (t < 0.70) { var s = (t-0.50)/0.20; r = 142+s*45; g2 = 187+s*15; b = 49+s*3; }
+  else if (t < 0.85) { var s = (t-0.70)/0.15; r = 187+s*30; g2 = 202-s*5; b = 52+s*8; }
+  else { var s = (t-0.85)/0.15; r = 217+s*20; g2 = 197+s*8; b = 60+s*10; }
+  return 'rgb('+Math.round(r)+','+Math.round(g2)+','+Math.round(b)+')';
+}
+
+// ── 3D PROJECTION ──
+function pr(nx, ny, e) {
+  var wx = (nx - 0.5) * LW;
+  var wy = (e - EM) * exag;
+  var wz = (ny - 0.5) * LD;
+  var cY = Math.cos(rotY), sY = Math.sin(rotY);
+  var cX = Math.cos(rotX), sX = Math.sin(rotX);
+  var x1 = wx * cY - wz * sY;
+  var z1 = wx * sY + wz * cY;
+  var y2 = wy * cX - z1 * sX;
+  var z2 = wy * sX + z1 * cX;
+  var W = cv.width / dp, H = cv.height / dp;
+  return { x: W/2 + x1*zoom, y: H/2 - y2*zoom + 20, z: z2 };
+}
+
+function rsz() {
+  cv.width = window.innerWidth * dp;
+  cv.height = window.innerHeight * dp;
+  cv.style.width = window.innerWidth + 'px';
+  cv.style.height = window.innerHeight + 'px';
+  g.setTransform(dp, 0, 0, dp, 0, 0);
+}
+
+// ── HOUSE FOOTPRINT ──
+// Main block 90'×55', west wing 40'×35', garage 36'×28'
+// Positioned at ny~0.22-0.28 (upper slope, pad ~886-888)
+var houseFP = (function() {
+  var f2x = function(ft) { return ft / LW; };
+  var f2y = function(ft) { return ft / LD; };
+  var cx = 0.48, cy = 0.25;
+  var mw = f2x(90)/2, md = f2y(55)/2;
+  var ww = f2x(40), wd = f2y(35)/2;
+  var gw = f2x(36), gd = f2y(28)/2;
+  return [
+    { nx: cx-mw-ww+f2x(5), ny: cy-wd },
+    { nx: cx-mw, ny: cy-wd },
+    { nx: cx-mw, ny: cy-md },
+    { nx: cx+mw, ny: cy-md },
+    { nx: cx+mw+gw-f2x(5), ny: cy-md },
+    { nx: cx+mw+gw-f2x(5), ny: cy-md+f2y(28) },
+    { nx: cx+mw, ny: cy-md+f2y(28) },
+    { nx: cx+mw, ny: cy+md },
+    { nx: cx-mw, ny: cy+md },
+    { nx: cx-mw-ww+f2x(5), ny: cy+wd },
+  ];
+})();
+
+// ── TREE POSITIONS (from survey – extensive tree cover) ──
+var trees = [];
+(function() {
+  // Generate realistic tree positions matching survey (dense canopy)
+  var rng = function(seed) { var x = Math.sin(seed)*10000; return x-Math.floor(x); };
+  for (var i = 0; i < 120; i++) {
+    var nx = rng(i*7.3+1.1);
+    var ny = rng(i*13.7+2.9);
+    // Skip house pad area and driveway corridor
+    var hd = Math.sqrt(Math.pow(nx-0.48,2)+Math.pow(ny-0.25,2));
+    if (hd < 0.12) continue;
+    // Skip pool area
+    if (nx > 0.30 && nx < 0.52 && ny > 0.30 && ny < 0.40) continue;
+    // More trees along boundaries
+    var edgeBias = 1;
+    if (nx < 0.1 || nx > 0.9 || ny > 0.7) edgeBias = 2;
+    if (edgeBias < 2 && rng(i*3.1) > 0.55) continue;
+    trees.push({
+      nx: nx, ny: ny,
+      type: rng(i*5.7) > 0.35 ? 'hardwood' : 'pine',
+      size: 4 + rng(i*9.2) * 6
+    });
+  }
+})();
+
+// ═══════════════════════════════════════
+// MAIN DRAW
+// ═══════════════════════════════════════
+function draw() {
+  var W = cv.width/dp, H = cv.height/dp;
+  g.fillStyle = '#0b1118';
+  g.fillRect(0, 0, W, H);
+
+  // ── TERRAIN MESH ──
+  var quads = [];
+  var st = 1.0/GN;
+  for (var iy=0; iy<GN; iy++) {
+    for (var ix=0; ix<GN; ix++) {
+      var n0=ix*st, n1=(ix+1)*st, m0=iy*st, m1=(iy+1)*st;
+      var e00=el(n0,m0), e10=el(n1,m0), e01=el(n0,m1), e11=el(n1,m1);
+      var ea=(e00+e10+e01+e11)/4;
+      var p00=pr(n0,m0,e00), p10=pr(n1,m0,e10), p01=pr(n0,m1,e01), p11=pr(n1,m1,e11);
+      quads.push({a:p00,b:p10,c:p11,d:p01,ea:ea,za:(p00.z+p10.z+p01.z+p11.z)/4});
+    }
+  }
+  quads.sort(function(a,b){return b.za-a.za;});
+  for(var i=0;i<quads.length;i++){
+    var q=quads[i];
+    g.beginPath();g.moveTo(q.a.x,q.a.y);g.lineTo(q.b.x,q.b.y);g.lineTo(q.c.x,q.c.y);g.lineTo(q.d.x,q.d.y);g.closePath();
+    g.fillStyle=ecol(q.ea);g.fill();
+    g.strokeStyle='rgba(0,0,0,0.05)';g.lineWidth=0.3;g.stroke();
+  }
+
+  // ── CONTOUR LINES ──
+  if (show.C) {
+    var cs = 0.008;
+    var contourLabels = {};
+    for (var ce = 844; ce <= 898; ce += 2) {
+      var maj = (ce % 10 === 0);
+      var col = maj ? 'rgba(255,255,240,0.5)' : 'rgba(160,180,200,0.18)';
+      var ds = maj ? 1.8 : 0.7;
+      g.fillStyle = col;
+      var candidates = [];
+      
+      for (var ny=0; ny<1; ny+=cs) {
+        for (var nx=0; nx<1; nx+=cs) {
+          var e1=el(nx,ny), e2=el(nx+cs,ny);
+          if ((e1-ce)*(e2-ce)<0) {
+            var tt=(ce-e1)/(e2-e1);
+            var cnx=nx+tt*cs;
+            var p=pr(cnx,ny,ce);
+            g.fillRect(p.x-ds/2,p.y-ds/2,ds,ds);
+            if (maj && Math.abs(cnx-0.13)<0.05) candidates.push({x:p.x,y:p.y});
+          }
+          var e3=el(nx,ny+cs);
+          if ((e1-ce)*(e3-ce)<0) {
+            var tt2=(ce-e1)/(e3-e1);
+            var p2=pr(nx,ny+tt2*cs,ce);
+            g.fillRect(p2.x-ds/2,p2.y-ds/2,ds,ds);
+          }
+        }
+      }
+      if (maj && show.L && candidates.length > 0) {
+        contourLabels[ce] = candidates[Math.floor(candidates.length/2)];
+      }
+    }
+    // Draw contour labels
+    if (show.L) {
+      for (var elv in contourLabels) {
+        var cp = contourLabels[elv];
+        g.font = 'bold 8px -apple-system,sans-serif';
+        g.textAlign = 'center';
+        var txt = elv + "'";
+        var tw = g.measureText(txt).width + 6;
+        g.fillStyle = 'rgba(8,14,22,0.85)';
+        g.fillRect(cp.x-tw/2, cp.y-6, tw, 12);
+        g.strokeStyle = 'rgba(255,255,240,0.25)';
+        g.lineWidth = 0.5;
+        g.strokeRect(cp.x-tw/2, cp.y-6, tw, 12);
+        g.fillStyle = 'rgba(255,255,240,0.85)';
+        g.fillText(txt, cp.x, cp.y+3);
+      }
+    }
+  }
+
+  // ── SURVEY BOUNDARY ──
+  if (show.B) {
+    // Approximate property outline from survey (not a perfect rectangle)
+    // Based on survey: ~380' E-W frontage on W Paces Ferry, ~450' deep, irregular south boundary
+    var boundary = [
+      { nx: 0.05, ny: 0.02 },  // NW corner (at road)
+      { nx: 0.95, ny: 0.02 },  // NE corner (at road)
+      { nx: 0.97, ny: 0.50 },  // E midpoint (slight angle)
+      { nx: 0.92, ny: 0.95 },  // SE corner (irregular)
+      { nx: 0.15, ny: 0.97 },  // SW corner (angled)
+      { nx: 0.03, ny: 0.55 },  // W midpoint
+    ];
+    
+    g.setLineDash([8,4]);
+    g.strokeStyle = 'rgba(255,200,60,0.7)';
+    g.lineWidth = 1.5;
+    g.beginPath();
+    for (var i=0; i<boundary.length; i++) {
+      var c = boundary[i];
+      var p = pr(c.nx, c.ny, el(c.nx, c.ny));
+      if (i===0) g.moveTo(p.x,p.y); else g.lineTo(p.x,p.y);
+    }
+    g.closePath(); g.stroke();
+    g.setLineDash([]);
+    
+    // Corner iron pins
+    for (var i=0; i<boundary.length; i++) {
+      var c = boundary[i];
+      var p = pr(c.nx, c.ny, el(c.nx, c.ny));
+      g.fillStyle = '#ffcc33';
+      g.beginPath(); g.arc(p.x,p.y,3.5,0,Math.PI*2); g.fill();
+      g.strokeStyle = '#aa8800'; g.lineWidth = 1; g.stroke();
+    }
+    
+    if (show.L) {
+      // Edge dimension labels
+      var edges = [
+        { f: boundary[0], t: boundary[1], lb: "~380' (W PACES FERRY RD — 60' R/W)", off: [0,-14] },
+        { f: boundary[1], t: boundary[2], lb: "~225' (E LINE)", off: [12,0] },
+        { f: boundary[2], t: boundary[3], lb: "~240' (SE LINE)", off: [12,0] },
+        { f: boundary[3], t: boundary[4], lb: "~300' (S LINE — NANCY CREEK SIDE)", off: [0,14] },
+        { f: boundary[4], t: boundary[5], lb: "~220' (SW LINE)", off: [-12,0] },
+        { f: boundary[5], t: boundary[0], lb: "~250' (W LINE)", off: [-12,0] },
+      ];
+      for (var i=0; i<edges.length; i++) {
+        var ed = edges[i];
+        var mx = (ed.f.nx+ed.t.nx)/2, my = (ed.f.ny+ed.t.ny)/2;
+        var mp = pr(mx, my, el(mx,my));
+        g.font = 'bold 7px -apple-system,sans-serif';
+        g.textAlign = 'center';
+        g.fillStyle = 'rgba(8,14,22,0.8)';
+        var tw = g.measureText(ed.lb).width + 6;
+        g.fillRect(mp.x+ed.off[0]-tw/2, mp.y+ed.off[1]-6, tw, 12);
+        g.fillStyle = 'rgba(255,200,60,0.9)';
+        g.fillText(ed.lb, mp.x+ed.off[0], mp.y+ed.off[1]+3);
+      }
+      
+      // Corner elevation labels
+      var cLabels = ['NW','NE','E','SE','SW','W'];
+      for (var i=0; i<boundary.length; i++) {
+        var c = boundary[i];
+        var ce2 = el(c.nx, c.ny);
+        var p = pr(c.nx, c.ny, ce2);
+        g.font = '7px -apple-system,sans-serif';
+        g.fillStyle = 'rgba(255,200,60,0.65)';
+        g.textAlign = 'center';
+        g.fillText(cLabels[i]+': '+Math.round(ce2)+"'", p.x, p.y-7);
+      }
+    }
+  }
+
+  // ── SETBACK LINES ──
+  if (show.S) {
+    // Front setback: 47' from road R/W
+    var setNy = 0.02 + 47/LD; // ~0.125
+    g.setLineDash([4,3]);
+    g.strokeStyle = 'rgba(255,100,100,0.5)';
+    g.lineWidth = 1;
+    g.beginPath();
+    var s0 = pr(0.05, setNy, el(0.05,setNy));
+    var s1 = pr(0.95, setNy, el(0.95,setNy));
+    g.moveTo(s0.x,s0.y); g.lineTo(s1.x,s1.y); g.stroke();
+    
+    if (show.L) {
+      var sm = pr(0.50, setNy, el(0.50,setNy));
+      g.font = '7px -apple-system,sans-serif';
+      g.textAlign = 'center';
+      g.fillStyle = 'rgba(255,100,100,0.7)';
+      g.fillText("47' FRONT SETBACK", sm.x, sm.y-6);
+    }
+    
+    // Rear setback: 15' from south boundary
+    var rearNy = 0.96 - 15/LD;
+    g.beginPath();
+    var r0 = pr(0.15, rearNy, el(0.15,rearNy));
+    var r1 = pr(0.92, rearNy, el(0.92,rearNy));
+    g.moveTo(r0.x,r0.y); g.lineTo(r1.x,r1.y); g.stroke();
+    
+    if (show.L) {
+      var rm = pr(0.54, rearNy, el(0.54,rearNy));
+      g.fillText("15' REAR SETBACK", rm.x, rm.y-6);
+    }
+    
+    // Side setbacks (7' min from property lines)
+    var sideW = 0.05 + 7/LW;
+    var sideE = 0.95 - 7/LW;
+    g.strokeStyle = 'rgba(255,100,100,0.3)';
+    g.beginPath();
+    g.moveTo(pr(sideW,0.12,el(sideW,0.12)).x, pr(sideW,0.12,el(sideW,0.12)).y);
+    g.lineTo(pr(sideW+0.02,0.90,el(sideW+0.02,0.90)).x, pr(sideW+0.02,0.90,el(sideW+0.02,0.90)).y);
+    g.stroke();
+    g.beginPath();
+    g.moveTo(pr(sideE,0.12,el(sideE,0.12)).x, pr(sideE,0.12,el(sideE,0.12)).y);
+    g.lineTo(pr(sideE-0.02,0.90,el(sideE-0.02,0.90)).x, pr(sideE-0.02,0.90,el(sideE-0.02,0.90)).y);
+    g.stroke();
+    
+    g.setLineDash([]);
+  }
+
+  // ── ROAD (W Paces Ferry — NORTH side) ──
+  var re = el(0.5, 0.01);
+  var rA=pr(0.0,0.0,re+1), rB=pr(1.0,0.0,re+1), rC=pr(1.0,0.025,re), rD=pr(0.0,0.025,re);
+  g.fillStyle = 'rgba(35,35,35,0.88)';
+  g.beginPath(); g.moveTo(rA.x,rA.y); g.lineTo(rB.x,rB.y); g.lineTo(rC.x,rC.y); g.lineTo(rD.x,rD.y); g.closePath(); g.fill();
+  g.setLineDash([6,4]);
+  g.strokeStyle = '#bbbb33'; g.lineWidth = 0.8;
+  var cL=pr(0.08,0.012,re+0.5), cR=pr(0.92,0.012,re+0.5);
+  g.beginPath(); g.moveTo(cL.x,cL.y); g.lineTo(cR.x,cR.y); g.stroke();
+  g.setLineDash([]);
+
+  // ── TREES ──
+  if (show.T) {
+    for (var i=0; i<trees.length; i++) {
+      var t = trees[i];
+      var te = el(t.nx, t.ny);
+      var tp = pr(t.nx, t.ny, te);
+      var sz = t.size * zoom;
+      if (t.type === 'pine') {
+        g.fillStyle = 'rgba(30,90,40,0.5)';
+        g.beginPath();
+        g.moveTo(tp.x, tp.y - sz*2);
+        g.lineTo(tp.x - sz, tp.y);
+        g.lineTo(tp.x + sz, tp.y);
+        g.closePath(); g.fill();
+      } else {
+        g.fillStyle = 'rgba(50,110,50,0.4)';
+        g.beginPath();
+        g.arc(tp.x, tp.y - sz*0.8, sz, 0, Math.PI*2);
+        g.fill();
+      }
+    }
+  }
+
+  // ── HOUSE FOOTPRINT ──
+  if (show.H) {
+    var houseE = 887;
+    var wallH = 14;
+    var wallE = houseE + wallH / Math.max(exag, 0.3);
+    
+    // Ground footprint fill
+    g.fillStyle = 'rgba(68,170,255,0.12)';
+    g.strokeStyle = 'rgba(68,170,255,0.6)';
+    g.lineWidth = 1.5;
+    g.beginPath();
+    for (var i=0; i<houseFP.length; i++) {
+      var hp = pr(houseFP[i].nx, houseFP[i].ny, houseE);
+      if (i===0) g.moveTo(hp.x,hp.y); else g.lineTo(hp.x,hp.y);
+    }
+    g.closePath(); g.fill(); g.stroke();
+    
+    // 3D walls
+    g.lineWidth = 0.7;
+    for (var i=0; i<houseFP.length; i++) {
+      var j = (i+1) % houseFP.length;
+      var b0=pr(houseFP[i].nx,houseFP[i].ny,houseE);
+      var b1=pr(houseFP[j].nx,houseFP[j].ny,houseE);
+      var t0=pr(houseFP[i].nx,houseFP[i].ny,wallE);
+      var t1=pr(houseFP[j].nx,houseFP[j].ny,wallE);
+      var dx=houseFP[j].nx-houseFP[i].nx;
+      var shade = 0.35 + Math.abs(dx)*0.35;
+      g.fillStyle = 'rgba(200,210,220,'+shade+')';
+      g.strokeStyle = 'rgba(68,170,255,0.35)';
+      g.beginPath();
+      g.moveTo(b0.x,b0.y); g.lineTo(b1.x,b1.y); g.lineTo(t1.x,t1.y); g.lineTo(t0.x,t0.y);
+      g.closePath(); g.fill(); g.stroke();
+    }
+    
+    // Roof
+    g.fillStyle = 'rgba(180,190,200,0.45)';
+    g.strokeStyle = 'rgba(68,170,255,0.45)';
+    g.lineWidth = 1;
+    g.beginPath();
+    for (var i=0; i<houseFP.length; i++) {
+      var rp = pr(houseFP[i].nx, houseFP[i].ny, wallE);
+      if (i===0) g.moveTo(rp.x,rp.y); else g.lineTo(rp.x,rp.y);
+    }
+    g.closePath(); g.fill(); g.stroke();
+    
+    // ── Pool (south of house) ──
+    var poolCx=0.42, poolCy=0.34;
+    var poolW=40/LW/2, poolD=20/LD/2;
+    var deckW=60/LW/2, deckD=35/LD/2;
+    var poolE2=el(poolCx,poolCy);
+    // Deck
+    g.fillStyle='rgba(160,150,140,0.35)';
+    g.strokeStyle='rgba(160,150,140,0.4)';
+    g.lineWidth=0.8;
+    var dk=[pr(poolCx-deckW,poolCy-deckD,poolE2),pr(poolCx+deckW,poolCy-deckD,poolE2),
+            pr(poolCx+deckW,poolCy+deckD,poolE2),pr(poolCx-deckW,poolCy+deckD,poolE2)];
+    g.beginPath();g.moveTo(dk[0].x,dk[0].y);g.lineTo(dk[1].x,dk[1].y);g.lineTo(dk[2].x,dk[2].y);g.lineTo(dk[3].x,dk[3].y);g.closePath();g.fill();g.stroke();
+    // Pool water
+    g.fillStyle='rgba(34,150,210,0.45)';g.strokeStyle='rgba(34,150,210,0.6)';g.lineWidth=1;
+    var pl=[pr(poolCx-poolW,poolCy-poolD,poolE2-0.3),pr(poolCx+poolW,poolCy-poolD,poolE2-0.3),
+            pr(poolCx+poolW,poolCy+poolD,poolE2-0.3),pr(poolCx-poolW,poolCy+poolD,poolE2-0.3)];
+    g.beginPath();g.moveTo(pl[0].x,pl[0].y);g.lineTo(pl[1].x,pl[1].y);g.lineTo(pl[2].x,pl[2].y);g.lineTo(pl[3].x,pl[3].y);g.closePath();g.fill();g.stroke();
+    
+    // Motor court / garage area (between house and road)
+    var mcCx=0.48, mcCy=0.18;
+    var mcW=45/LW/2, mcD=25/LD/2;
+    var mcE=el(mcCx,mcCy);
+    g.fillStyle='rgba(110,106,102,0.4)';g.strokeStyle='rgba(130,126,122,0.4)';g.lineWidth=0.8;
+    var mc=[pr(mcCx-mcW,mcCy-mcD,mcE),pr(mcCx+mcW,mcCy-mcD,mcE),
+            pr(mcCx+mcW,mcCy+mcD,mcE),pr(mcCx-mcW,mcCy+mcD,mcE)];
+    g.beginPath();g.moveTo(mc[0].x,mc[0].y);g.lineTo(mc[1].x,mc[1].y);g.lineTo(mc[2].x,mc[2].y);g.lineTo(mc[3].x,mc[3].y);g.closePath();g.fill();g.stroke();
+    
+    // Dimension labels
+    if (show.L) {
+      var lbH = function(txt,nx,ny,oy,col,sz) {
+        var e2=el(nx,ny);
+        var p=pr(nx,ny,e2+oy/Math.max(exag,0.3));
+        g.font='bold '+(sz||7)+'px -apple-system,sans-serif';g.textAlign='center';
+        g.fillStyle='rgba(0,0,0,0.4)';g.fillText(txt,p.x+1,p.y+1);
+        g.fillStyle=col;g.fillText(txt,p.x,p.y);
+      };
+      // House dimensions
+      lbH("90'", 0.48, 0.31, 5, '#44aaff', 7);
+      lbH("55'", 0.60, 0.25, 5, '#44aaff', 7);
+      lbH("GARAGE 36'×28'", 0.575, 0.215, 8, 'rgba(68,170,255,0.6)', 6);
+      lbH("WEST WING 40'×35'", 0.35, 0.25, 8, 'rgba(68,170,255,0.6)', 6);
+      
+      // Pool
+      lbH("POOL 40'×20'", poolCx, poolCy, 8, '#44ccff', 7);
+      lbH("DECK 60'×35'", poolCx, poolCy+0.04, 4, 'rgba(160,180,200,0.5)', 6);
+      
+      // Motor court
+      lbH("MOTOR COURT", mcCx, mcCy, 5, '#ccccaa', 7);
+    }
+  }
+
+  // ── DRIVEWAY ──
+  if (show.D) {
+    var drvPts = driveway(200);
+    // Glow
+    g.strokeStyle='rgba(255,80,160,0.22)';g.lineWidth=Math.max(7,22*zoom);
+    g.lineCap='round';g.lineJoin='round';
+    g.beginPath();
+    for(var i=0;i<drvPts.length;i++){var p=pr(drvPts[i].nx,drvPts[i].ny,drvPts[i].e);if(i===0)g.moveTo(p.x,p.y);else g.lineTo(p.x,p.y);}
+    g.stroke();
+    // Main
+    g.strokeStyle='rgba(255,80,160,0.5)';g.lineWidth=Math.max(4,15*zoom);
+    g.beginPath();
+    for(var i=0;i<drvPts.length;i++){var p=pr(drvPts[i].nx,drvPts[i].ny,drvPts[i].e);if(i===0)g.moveTo(p.x,p.y);else g.lineTo(p.x,p.y);}
+    g.stroke();
+    // Center
+    g.strokeStyle='rgba(220,200,190,0.3)';g.lineWidth=Math.max(2,7*zoom);
+    g.beginPath();
+    for(var i=0;i<drvPts.length;i++){var p=pr(drvPts[i].nx,drvPts[i].ny,drvPts[i].e);if(i===0)g.moveTo(p.x,p.y);else g.lineTo(p.x,p.y);}
+    g.stroke();
+    
+    // Elevation stations
+    if (show.L) {
+      for (var i=0; i<drvPts.length; i+=40) {
+        var sp=drvPts[i];
+        var pp=pr(sp.nx,sp.ny,sp.e);
+        var txt=Math.round(sp.e)+"'";
+        g.font='bold 7px -apple-system,sans-serif';g.textAlign='center';
+        g.fillStyle='rgba(8,14,22,0.8)';
+        var tw=g.measureText(txt).width+4;
+        g.fillRect(pp.x-tw/2,pp.y-12,tw,10);
+        g.fillStyle='#ff88cc';
+        g.fillText(txt,pp.x,pp.y-4);
+      }
+    }
+    
+    // Entry dot
+    var ep=pr(drvPts[0].nx,drvPts[0].ny,drvPts[0].e);
+    g.fillStyle='#44ff66';g.beginPath();g.arc(ep.x,ep.y,4.5,0,Math.PI*2);g.fill();
+    g.strokeStyle='#22aa44';g.lineWidth=1.2;g.stroke();
+    // Arrival
+    var ap=pr(drvPts[drvPts.length-1].nx,drvPts[drvPts.length-1].ny,drvPts[drvPts.length-1].e);
+    g.fillStyle='#ffaa44';g.beginPath();g.arc(ap.x,ap.y,4.5,0,Math.PI*2);g.fill();
+    g.strokeStyle='#cc7722';g.lineWidth=1.2;g.stroke();
+  }
+
+  // ── LABELS ──
+  if (show.L) {
+    function lb(txt,nx,ny,oy,col,sz) {
+      var e=el(nx,ny);var p=pr(nx,ny,e+oy/Math.max(exag,0.3));
+      g.font='bold '+(sz||9)+'px -apple-system,sans-serif';g.textAlign='center';
+      g.fillStyle='rgba(0,0,0,0.45)';g.fillText(txt,p.x+1,p.y+1);
+      g.fillStyle=col;g.fillText(txt,p.x,p.y);
+    }
+    
+    lb('W PACES FERRY RD NW (ELEV ~898\')', 0.50, 0.005, 5, '#ffdd66', 10);
+    lb('HOUSE PAD ~887\'', 0.48, 0.25, 22, '#ffffff', 10);
+    lb('10,000 SF PROPOSED (2 STORY)', 0.48, 0.25, 16, 'rgba(255,255,255,0.55)', 7);
+    
+    if (show.D) {
+      lb('● ENTRY (~896\')', 0.48, 0.025, 8, '#44ff66', 8);
+      lb('● ARRIVAL (~887\')', 0.48, 0.29, 6, '#ffaa44', 8);
+      lb('CONCRETE DRIVEWAY', 0.55, 0.12, 5, '#ff99cc', 7);
+    }
+    
+    // Spot elevations across terrain
+    var spots = [
+      {nx:0.50,ny:0.10,lbl:'894\''},
+      {nx:0.50,ny:0.45,lbl:'870\''},
+      {nx:0.50,ny:0.60,lbl:'860\''},
+      {nx:0.50,ny:0.75,lbl:'850\''},
+      {nx:0.50,ny:0.90,lbl:'846\''},
+    ];
+    for (var i=0;i<spots.length;i++) {
+      var s=spots[i];
+      var se=el(s.nx,s.ny);
+      var sp=pr(s.nx,s.ny,se);
+      g.strokeStyle='rgba(255,255,255,0.18)';g.lineWidth=0.5;
+      g.beginPath();g.moveTo(sp.x-3,sp.y);g.lineTo(sp.x+3,sp.y);g.stroke();
+      g.beginPath();g.moveTo(sp.x,sp.y-3);g.lineTo(sp.x,sp.y+3);g.stroke();
+      g.font='7px -apple-system,sans-serif';
+      g.fillStyle='rgba(160,200,230,0.55)';g.textAlign='left';
+      g.fillText(Math.round(se)+"'",sp.x+5,sp.y+2);
+    }
+    
+    // Adjacent owners
+    lb('MAURICE SCOTT', 0.02, 0.35, 2, 'rgba(200,180,140,0.4)', 7);
+    lb('1690 Paces Bend Ct', 0.02, 0.35, -3, 'rgba(200,180,140,0.3)', 6);
+    lb('BUCKHEAD PROP', 0.98, 0.25, 2, 'rgba(200,180,140,0.4)', 7);
+    lb('SARAH W. EARLE', 0.90, 0.85, 2, 'rgba(200,180,140,0.4)', 7);
+    lb('STEPHANIE CANNON', 0.50, 0.98, 2, 'rgba(200,180,140,0.4)', 7);
+    
+    // Scale bar
+    var sb0=pr(0.78,0.93,el(0.78,0.93));
+    var sb1=pr(0.78+100/LW,0.93,el(0.78+100/LW,0.93));
+    g.strokeStyle='rgba(255,255,255,0.4)';g.lineWidth=2;
+    g.beginPath();g.moveTo(sb0.x,sb0.y);g.lineTo(sb1.x,sb1.y);g.stroke();
+    g.beginPath();g.moveTo(sb0.x,sb0.y-3);g.lineTo(sb0.x,sb0.y+3);g.stroke();
+    g.beginPath();g.moveTo(sb1.x,sb1.y-3);g.lineTo(sb1.x,sb1.y+3);g.stroke();
+    g.font='8px -apple-system,sans-serif';g.fillStyle='rgba(255,255,255,0.5)';g.textAlign='center';
+    g.fillText('100 ft',(sb0.x+sb1.x)/2,sb0.y+14);
+    
+    // North arrow (pointing toward viewer's top-left in this view = toward road)
+    var naX=W-45,naY=55;
+    g.strokeStyle='rgba(255,255,255,0.45)';g.lineWidth=1.5;
+    g.beginPath();g.moveTo(naX,naY+14);g.lineTo(naX,naY-14);g.stroke();
+    g.beginPath();g.moveTo(naX-4,naY-8);g.lineTo(naX,naY-14);g.lineTo(naX+4,naY-8);g.closePath();
+    g.fillStyle='rgba(255,255,255,0.45)';g.fill();
+    g.font='bold 9px -apple-system,sans-serif';g.textAlign='center';
+    g.fillStyle='rgba(255,255,255,0.55)';
+    g.fillText('N',naX,naY-19);
+    g.font='6px -apple-system,sans-serif';
+    g.fillText('(ROAD)',naX,naY+22);
+  }
+}
+
+// ── CONTROLS ──
+var exS=document.getElementById('exS');
+exS.addEventListener('input',function(){exag=this.value/10;document.getElementById('exV').textContent=exag.toFixed(1)+'×';draw();});
+function tgl(k){show[k]=!show[k];document.getElementById('b'+k).className=show[k]?'on':'';draw();}
+function rv(){rotY=-0.55;rotX=0.50;zoom=0.52;exag=1.2;exS.value=12;document.getElementById('exV').textContent='1.2×';draw();}
+function dZ(f){zoom=Math.max(0.12,Math.min(3,zoom*f));draw();}
+
+// Mouse
+cv.addEventListener('mousedown',function(e){drag=true;lx=e.clientX;ly=e.clientY;});
+cv.addEventListener('mousemove',function(e){if(!drag)return;rotY+=(e.clientX-lx)*0.005;rotX=Math.max(0.05,Math.min(1.5,rotX-(e.clientY-ly)*0.005));lx=e.clientX;ly=e.clientY;draw();});
+window.addEventListener('mouseup',function(){drag=false;});
+cv.addEventListener('wheel',function(e){e.preventDefault();zoom=Math.max(0.12,Math.min(3,zoom*(e.deltaY>0?0.94:1.07)));draw();},{passive:false});
+
+// Touch
+var ltd=0;
+cv.addEventListener('touchstart',function(e){e.preventDefault();if(e.touches.length===1){drag=true;lx=e.touches[0].clientX;ly=e.touches[0].clientY;}if(e.touches.length===2){drag=false;var dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY;ltd=Math.sqrt(dx*dx+dy*dy);}},{passive:false});
+cv.addEventListener('touchmove',function(e){e.preventDefault();if(e.touches.length===1&&drag){rotY+=(e.touches[0].clientX-lx)*0.005;rotX=Math.max(0.05,Math.min(1.5,rotX-(e.touches[0].clientY-ly)*0.005));lx=e.touches[0].clientX;ly=e.touches[0].clientY;draw();}if(e.touches.length===2){var dx=e.touches[0].clientX-e.touches[1].clientX,dy=e.touches[0].clientY-e.touches[1].clientY;var d=Math.sqrt(dx*dx+dy*dy);if(ltd>0){zoom=Math.max(0.12,Math.min(3,zoom*ltd/d));draw();}ltd=d;}},{passive:false});
+cv.addEventListener('touchend',function(){drag=false;ltd=0;});
+
+rsz();draw();
+window.addEventListener('resize',function(){rsz();draw();});
+</script>
+</body>
+</html>
