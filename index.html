@@ -66,9 +66,11 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none}
 <div class="rw"><span class="lb">Total footprint</span><span class="vl">~7,310 SF</span></div>
 <div class="rw"><span class="lb">2-story total</span><span class="vl">~10,000 SF</span></div>
 
-<div class="sc">Driveway</div>
-<div class="rw"><span class="lb">Road → house pad</span><span class="vl am">60 ft climb</span></div>
-<div class="rw"><span class="lb">Driveway style</span><span class="vl">Concrete, curved</span></div>
+<div class="sc">S-Curve Driveway</div>
+<div class="rw"><span class="lb">Rise</span><span class="vl">60 ft (820→880)</span></div>
+<div class="rw"><span class="lb">Path length</span><span class="vl">~420 ft</span></div>
+<div class="rw"><span class="lb">Target grade</span><span class="vl am">~15% consistent</span></div>
+<div class="rw"><span class="lb">Width</span><span class="vl">20 ft asphalt</span></div>
 
 <div class="sc">Adjacent Owners</div>
 <div class="rw"><span class="lb">West</span><span class="vl" style="font-size:8px">Maurice Scott (1690 Paces Bend Ct)</span></div>
@@ -228,36 +230,58 @@ function el(nx, ny) {
   return Math.max(EMIN, Math.min(EMAX, e));
 }
 
-// ── S-CURVE DRIVEWAY ──
-// Entry: west third of frontage (~100' from W corner = nx ~0.27)
-// Per survey: enters from road, curves right (east/SE), then sweeps
-// back toward center to motor court at house (nx ~0.48, ny ~0.42)
+// ── S-CURVE DRIVEWAY — designed for ~15% constant grade ──
+// 60' rise at 15% = 400' min run. Path ~420' with 3 switchback curves
+// Entry: west third (nx=0.27) at road. Arrival: house center (nx=0.48)
+// Bezier S-curve: right → left → right to stretch the path
 function driveway(n) {
   var pts = [];
-  // Entry point: nx=0.27 (western third), ny=0.025 (at road)
-  // Arrival: nx=0.48 (centered at house), ny=0.42
-  var startX = 0.27, startY = 0.025;
-  var endX = 0.48, endY = 0.42;
+  
+  // Define waypoints for a proper S-curve that elongates the path
+  // to keep grade around 15%. 7 control points for smooth S.
+  var waypoints = [
+    { nx: 0.27, ny: 0.025 },  // 0: entry at road (west third)
+    { nx: 0.30, ny: 0.06 },   // 1: heading slightly east
+    { nx: 0.55, ny: 0.10 },   // 2: first curve - swinging east
+    { nx: 0.72, ny: 0.16 },   // 3: far east apex of first curve
+    { nx: 0.62, ny: 0.24 },   // 4: turning back west
+    { nx: 0.32, ny: 0.30 },   // 5: far west apex of second curve
+    { nx: 0.35, ny: 0.35 },   // 6: heading back east
+    { nx: 0.48, ny: 0.42 },   // 7: arrival at motor court
+  ];
+  
+  // Catmull-Rom spline through waypoints for smooth curve
+  function catmullRom(p0, p1, p2, p3, t) {
+    var t2 = t * t, t3 = t2 * t;
+    return 0.5 * (
+      (2 * p1) +
+      (-p0 + p2) * t +
+      (2*p0 - 5*p1 + 4*p2 - p3) * t2 +
+      (-p0 + 3*p1 - 3*p2 + p3) * t3
+    );
+  }
+  
+  var wp = waypoints;
+  var totalSegs = wp.length - 1;
   
   for (var i = 0; i <= n; i++) {
     var t = i / n;
-    // ny: linear from road to house
-    var ny = startY + t * (endY - startY);
+    var segFloat = t * totalSegs;
+    var seg = Math.min(Math.floor(segFloat), totalSegs - 1);
+    var lt = segFloat - seg;
     
-    // nx path: starts west (0.27), sweeps RIGHT (east) toward 0.65,
-    // then curves back LEFT (west) to arrive at center (0.48)
-    // Using cubic Bezier-like control:
-    //   P0 = 0.27 (entry, west third)
-    //   P1 = 0.30 (slight east drift early)
-    //   P2 = 0.68 (far east at mid-curve)
-    //   P3 = 0.48 (arrival at house center)
-    var u = 1 - t;
-    var nx = u*u*u * 0.27 
-           + 3*u*u*t * 0.32 
-           + 3*u*t*t * 0.68 
-           + t*t*t * 0.48;
+    // Get 4 control points (clamp at boundaries)
+    var i0 = Math.max(0, seg - 1);
+    var i1 = seg;
+    var i2 = Math.min(seg + 1, wp.length - 1);
+    var i3 = Math.min(seg + 2, wp.length - 1);
     
-    nx = Math.max(0.08, Math.min(0.88, nx));
+    var nx = catmullRom(wp[i0].nx, wp[i1].nx, wp[i2].nx, wp[i3].nx, lt);
+    var ny = catmullRom(wp[i0].ny, wp[i1].ny, wp[i2].ny, wp[i3].ny, lt);
+    
+    nx = Math.max(0.05, Math.min(0.92, nx));
+    ny = Math.max(0.02, Math.min(0.45, ny));
+    
     pts.push({ nx: nx, ny: ny, e: el(nx, ny) });
   }
   return pts;
@@ -376,54 +400,96 @@ function draw() {
     g.strokeStyle='rgba(0,0,0,0.05)';g.lineWidth=0.3;g.stroke();
   }
 
-  // ── CONTOUR LINES ──
+  // ── CONTOUR LINES — 4' intervals, labeled every 8' ──
   if (show.C) {
-    var cs = 0.008;
+    var cs = 0.006; // finer sampling for smoother contour lines
     var contourLabels = {};
-    for (var ce = 820; ce <= 882; ce += 2) {
-      var maj = (ce % 10 === 0);
-      var col = maj ? 'rgba(255,255,240,0.5)' : 'rgba(160,180,200,0.18)';
-      var ds = maj ? 1.8 : 0.7;
-      g.fillStyle = col;
-      var candidates = [];
+    
+    for (var ce = 820; ce <= 882; ce += 4) {
+      var maj = (ce % 8 === 0); // major every 8'
       
-      for (var ny=0; ny<1; ny+=cs) {
-        for (var nx=0; nx<1; nx+=cs) {
-          var e1=el(nx,ny), e2=el(nx+cs,ny);
-          if ((e1-ce)*(e2-ce)<0) {
-            var tt=(ce-e1)/(e2-e1);
-            var cnx=nx+tt*cs;
-            var p=pr(cnx,ny,ce);
-            g.fillRect(p.x-ds/2,p.y-ds/2,ds,ds);
-            if (maj && Math.abs(cnx-0.13)<0.05) candidates.push({x:p.x,y:p.y});
+      // Collect contour crossing points into line segments per row
+      var contourPts = [];
+      
+      // Scan horizontally — collect all crossing points for this elevation
+      for (var ny = 0; ny < 1; ny += cs) {
+        var rowPts = [];
+        for (var nx = 0; nx < 1; nx += cs) {
+          var e1 = el(nx, ny), e2 = el(nx + cs, ny);
+          if ((e1 - ce) * (e2 - ce) < 0) {
+            var tt = (ce - e1) / (e2 - e1);
+            var cnx = nx + tt * cs;
+            var p = pr(cnx, ny, ce);
+            rowPts.push({ x: p.x, y: p.y, nx: cnx, ny: ny });
           }
-          var e3=el(nx,ny+cs);
-          if ((e1-ce)*(e3-ce)<0) {
-            var tt2=(ce-e1)/(e3-e1);
-            var p2=pr(nx,ny+tt2*cs,ce);
-            g.fillRect(p2.x-ds/2,p2.y-ds/2,ds,ds);
+        }
+        for (var k = 0; k < rowPts.length; k++) contourPts.push(rowPts[k]);
+      }
+      
+      // Also scan vertically
+      for (var nx = 0; nx < 1; nx += cs) {
+        for (var ny = 0; ny < 1; ny += cs) {
+          var e1 = el(nx, ny), e3 = el(nx, ny + cs);
+          if ((e1 - ce) * (e3 - ce) < 0) {
+            var tt2 = (ce - e1) / (e3 - e1);
+            var cny = ny + tt2 * cs;
+            var p2 = pr(nx, cny, ce);
+            contourPts.push({ x: p2.x, y: p2.y, nx: nx, ny: cny });
           }
         }
       }
-      if (maj && show.L && candidates.length > 0) {
-        contourLabels[ce] = candidates[Math.floor(candidates.length/2)];
+      
+      // Draw as dashed lines (dotted for minor, solid-ish for major)
+      if (maj) {
+        g.setLineDash([]);
+        g.strokeStyle = 'rgba(255,255,240,0.55)';
+        g.lineWidth = 1.4;
+      } else {
+        g.setLineDash([3, 3]);
+        g.strokeStyle = 'rgba(200,210,220,0.25)';
+        g.lineWidth = 0.8;
+      }
+      
+      // Draw points as connected segments (sort by screen position)
+      // For cleaner rendering, draw as dots with appropriate size
+      var ds = maj ? 2.0 : 1.0;
+      g.fillStyle = maj ? 'rgba(255,255,240,0.55)' : 'rgba(200,210,220,0.25)';
+      for (var k = 0; k < contourPts.length; k++) {
+        g.fillRect(contourPts[k].x - ds/2, contourPts[k].y - ds/2, ds, ds);
+      }
+      g.setLineDash([]);
+      
+      // Collect label candidates for major contours (every 8')
+      if (maj && show.L && contourPts.length > 0) {
+        // Find a point on the left side for labeling
+        var best = null;
+        for (var k = 0; k < contourPts.length; k++) {
+          if (contourPts[k].nx > 0.08 && contourPts[k].nx < 0.18) {
+            if (!best || contourPts[k].ny > best.ny * 0.5) {
+              best = contourPts[k];
+            }
+          }
+        }
+        if (!best && contourPts.length > 0) best = contourPts[Math.floor(contourPts.length / 3)];
+        if (best) contourLabels[ce] = best;
       }
     }
-    // Draw contour labels
+    
+    // Draw contour elevation labels (every 8')
     if (show.L) {
       for (var elv in contourLabels) {
         var cp = contourLabels[elv];
         g.font = 'bold 8px -apple-system,sans-serif';
         g.textAlign = 'center';
         var txt = elv + "'";
-        var tw = g.measureText(txt).width + 6;
-        g.fillStyle = 'rgba(8,14,22,0.85)';
-        g.fillRect(cp.x-tw/2, cp.y-6, tw, 12);
-        g.strokeStyle = 'rgba(255,255,240,0.25)';
+        var tw = g.measureText(txt).width + 8;
+        g.fillStyle = 'rgba(8,14,22,0.88)';
+        g.fillRect(cp.x - tw/2, cp.y - 7, tw, 14);
+        g.strokeStyle = 'rgba(255,255,240,0.3)';
         g.lineWidth = 0.5;
-        g.strokeRect(cp.x-tw/2, cp.y-6, tw, 12);
-        g.fillStyle = 'rgba(255,255,240,0.85)';
-        g.fillText(txt, cp.x, cp.y+3);
+        g.strokeRect(cp.x - tw/2, cp.y - 7, tw, 14);
+        g.fillStyle = 'rgba(255,255,240,0.9)';
+        g.fillText(txt, cp.x, cp.y + 3);
       }
     }
   }
@@ -741,8 +807,9 @@ function draw() {
     if (show.D) {
       lb('● ENTRY (820\')', 0.27, 0.03, 8, '#44ff66', 8);
       lb('● ARRIVAL (880\')', 0.48, 0.43, 6, '#ffaa44', 8);
-      lb('S-CURVE DRIVEWAY', 0.62, 0.22, 5, '#ff99cc', 8);
-      lb('~520\' · 11.5% AVG GRADE', 0.62, 0.25, 3, '#ff99cc', 7);
+      lb('S-CURVE DRIVEWAY', 0.68, 0.18, 5, '#ff99cc', 8);
+      lb('~420\' · ~15% GRADE', 0.68, 0.21, 3, '#ff99cc', 7);
+      lb('20\' WIDE', 0.68, 0.24, 2, 'rgba(255,153,204,0.5)', 7);
     }
     
     // Spot elevations along the climb and descent
