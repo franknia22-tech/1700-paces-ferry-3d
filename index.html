@@ -287,8 +287,9 @@ function el(nx, ny) {
   // ── DRIVEWAY GRADING — flatten turning areas, 30' wide ──
   // S-curve waypoints (must match driveway function)
   var dwWP = [
-    {nx:0.65,ny:0.025}, {nx:0.68,ny:0.06}, {nx:0.70,ny:0.12},
-    {nx:0.65,ny:0.20}, {nx:0.55,ny:0.28}, {nx:0.48,ny:0.34},
+    {nx:0.82,ny:0.025}, {nx:0.75,ny:0.05}, {nx:0.60,ny:0.09},
+    {nx:0.40,ny:0.14}, {nx:0.22,ny:0.19}, {nx:0.15,ny:0.24},
+    {nx:0.22,ny:0.29}, {nx:0.38,ny:0.33}, {nx:0.52,ny:0.35},
     {nx:0.48,ny:0.38}
   ];
   // Check distance to each waypoint — flatten within 15' radius (30' wide)
@@ -347,17 +348,21 @@ function el(nx, ny) {
 function driveway(n) {
   var pts = [];
   
-  // Driveway per pink markup on site plan:
-  // Entry from RIGHT side of street, single sweeping LEFT curve
-  // up to large PARKING AREA on south side of house
+  // Driveway per green markup on screenshot:
+  // Entry far RIGHT of road → sweeps LEFT (west) along lower slope →
+  // big switchback turn on LEFT side → comes back RIGHT (east) climbing →
+  // curves into motor court
   var waypoints = [
-    { nx: 0.65, ny: 0.025 },  // 0: entry at road (right side)
-    { nx: 0.68, ny: 0.06 },   // 1: heading in, slight right
-    { nx: 0.70, ny: 0.12 },   // 2: curving through trees
-    { nx: 0.65, ny: 0.20 },   // 3: starting to sweep left
-    { nx: 0.55, ny: 0.28 },   // 4: sweeping left (west)
-    { nx: 0.48, ny: 0.34 },   // 5: approaching house
-    { nx: 0.48, ny: 0.38 },   // 6: arriving at parking area (south of house)
+    { nx: 0.82, ny: 0.025 },  // 0: entry far right of road
+    { nx: 0.75, ny: 0.05 },   // 1: heading left/west
+    { nx: 0.60, ny: 0.09 },   // 2: sweeping left along lower slope
+    { nx: 0.40, ny: 0.14 },   // 3: continuing west
+    { nx: 0.22, ny: 0.19 },   // 4: approaching far left
+    { nx: 0.15, ny: 0.24 },   // 5: switchback turn (far west)
+    { nx: 0.22, ny: 0.29 },   // 6: turning back east
+    { nx: 0.38, ny: 0.33 },   // 7: climbing east
+    { nx: 0.52, ny: 0.35 },   // 8: approaching house from south
+    { nx: 0.48, ny: 0.38 },   // 9: arrival at motor court
   ];
   
   // Catmull-Rom spline through waypoints for smooth curve
@@ -1272,11 +1277,10 @@ function draw() {
     lb('REAR BOUNDARY (840\')', 0.50, 0.95, 3, 'rgba(255,180,100,0.5)', 8);
     
     if (show.D) {
-      lb('● ENTRY (820\')', 0.65, 0.03, 8, '#44ff66', 8);
-      lb('● PARKING (875\')', 0.48, 0.38, 6, '#ffaa44', 8);
-      lb('DRIVEWAY', 0.68, 0.15, 5, '#ff99cc', 8);
-      lb('SWEEPING CURVE', 0.68, 0.18, 3, '#ff99cc', 7);
-      lb('30\' WIDE', 0.68, 0.21, 2, 'rgba(255,153,204,0.5)', 7);
+      lb('● ENTRY (820\')', 0.82, 0.03, 8, '#44ff66', 8);
+      lb('● MOTOR COURT (875\')', 0.48, 0.38, 6, '#ffaa44', 8);
+      lb('SWITCHBACK DRIVEWAY', 0.50, 0.12, 5, '#ff99cc', 8);
+      lb('30\' WIDE · ~15% GRADE', 0.50, 0.15, 3, '#ff99cc', 7);
     }
     
     // Spot elevations along the climb and descent
