@@ -54,14 +54,14 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none}
 <div class="rw"><span class="lb">Min lot width</span><span class="vl">≥ 100 ft</span></div>
 
 <div class="sc">Topography — To Scale</div>
-<div class="rw"><span class="lb">W Paces Ferry (street)</span><span class="vl">820 ft</span></div>
+<div class="rw"><span class="lb">W Paces Ferry (street)</span><span class="vl">818 ft</span></div>
 <div class="rw"><span class="lb">Graded pad (new)</span><span class="vl gn">875 ft</span></div>
 <div class="rw"><span class="lb">Natural ridge</span><span class="vl">~880 ft</span></div>
-<div class="rw"><span class="lb">Rise from street</span><span class="vl rd">55 ft (820→875)</span></div>
+<div class="rw"><span class="lb">Rise from street</span><span class="vl rd">57 ft (818→875)</span></div>
 <div class="rw"><span class="lb">Rear boundary</span><span class="vl">840 ft</span></div>
 <div class="rw"><span class="lb">Drop behind house</span><span class="vl am">35 ft</span></div>
 <div class="rw"><span class="lb">Cut at pad</span><span class="vl bl">~5 ft cut from 880</span></div>
-<div class="rw"><span class="lb">Contour interval</span><span class="vl">2 ft</span></div>
+<div class="rw"><span class="lb">Contour interval</span><span class="vl">2 ft (818→880)</span></div>
 
 <div class="sc">Proposed House</div>
 <div class="rw"><span class="lb">Main block</span><span class="vl">90 ft × 50 ft</span></div>
@@ -113,7 +113,7 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none}
 <div class="leg-row"><div class="leg-swatch" style="background:#5a9a3a"></div>850 ft</div>
 <div class="leg-row"><div class="leg-swatch" style="background:#3a8040"></div>840 ft (rear)</div>
 <div class="leg-row"><div class="leg-swatch" style="background:#2a6838"></div>830 ft</div>
-<div class="leg-row"><div class="leg-swatch" style="background:#1e5030"></div>820 ft (street)</div>
+<div class="leg-row"><div class="leg-swatch" style="background:#1e5030"></div>818 ft (street)</div>
 <div style="margin-top:6px;padding-top:6px;border-top:1px solid rgba(255,255,255,0.08)">
 <div class="leg-row"><div class="leg-swatch" style="background:rgba(255,200,60,0.7)"></div>Survey boundary</div>
 <div class="leg-row"><div class="leg-swatch" style="background:rgba(255,100,100,0.6)"></div>47' front setback</div>
@@ -121,8 +121,8 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none}
 <div class="leg-row"><div class="leg-swatch" style="background:#ff50a0"></div>Driveway</div>
 <div class="leg-row"><div class="leg-swatch" style="background:#44aaff"></div>House footprint</div>
 <div class="leg-row"><div class="leg-swatch" style="background:rgba(34,150,210,0.6)"></div>Pool</div>
-<div class="leg-row"><div class="leg-swatch" style="background:#fff"></div>10-ft major contour</div>
-<div class="leg-row"><div class="leg-swatch" style="background:rgba(160,180,200,0.25)"></div>2-ft minor contour</div>
+<div class="leg-row"><div class="leg-swatch" style="background:#fff"></div>10-ft contour (labeled)</div>
+<div class="leg-row"><div class="leg-swatch" style="background:rgba(255,255,255,0.22)"></div>2-ft contour (dotted)</div>
 </div>
 </div>
 
@@ -161,8 +161,8 @@ var dp = window.devicePixelRatio || 1;
 var LW = 380; // approximate E-W span (ft)
 var LD = 450; // approximate N-S span (ft)
 
-// Elevation range: 820 (street) → 880 (house/ridge) → 840 (rear)
-var EMIN = 816, EMAX = 884, ER = EMAX - EMIN, EM = (EMIN + EMAX) / 2;
+// Elevation range: 818 (street) → 880 (house/ridge) → 840 (rear)
+var EMIN = 814, EMAX = 884, ER = EMAX - EMIN, EM = (EMIN + EMAX) / 2;
 
 // Camera
 var exag = 1.0, rotY = -0.55, rotX = 0.50, zoom = 0.48;
@@ -178,13 +178,18 @@ var drag = false, lx = 0, ly = 0, GN = 60;
 function el(nx, ny) {
   var e;
   
-  // Street / road (ny 0–0.03): flat at 820'
-  if (ny < 0.03) {
-    e = 820;
+  // Street / road (ny 0–0.02): flat at 818'
+  if (ny < 0.02) {
+    e = 818;
   }
-  // Initial climb from street (ny 0.03–0.12): 820 → 838  (steep start, +18' over ~45')
+  // Shoulder / gutter transition (ny 0.02–0.04): 818 → 820
+  else if (ny < 0.04) {
+    var t = (ny - 0.02) / 0.02;
+    e = 818 + t * 2;
+  }
+  // Initial climb from street (ny 0.04–0.12): 820 → 838  (steep start, +18' over ~40')
   else if (ny < 0.12) {
-    var t = (ny - 0.03) / 0.09;
+    var t = (ny - 0.04) / 0.08;
     e = 820 + t * t * 18; // accelerating uphill
   }
   // Mid climb (ny 0.12–0.25): 838 → 862  (+24' over ~65')
@@ -539,33 +544,32 @@ function draw() {
     g.strokeStyle='rgba(0,0,0,0.05)';g.lineWidth=0.3;g.stroke();
   }
 
-  // ── CONTOUR LINES — 4' intervals, labeled every 8' ──
+  // ── CONTOUR LINES — 2' intervals, labeled every 10' ──
+  // White dotted lines from 818' (street) all the way up to 880' (house pad)
   if (show.C) {
-    var cs = 0.006; // finer sampling for smoother contour lines
+    var cs = 0.005; // fine sampling for smooth contours
     var contourLabels = {};
     
-    for (var ce = 820; ce <= 882; ce += 4) {
-      var maj = (ce % 8 === 0); // major every 8'
+    for (var ce = 818; ce <= 880; ce += 2) {
+      var maj = (ce % 10 === 0); // major every 10'
+      var mid = (ce % 10 === 4 || ce % 10 === 6); // mid lines every other 2'
       
-      // Collect contour crossing points into line segments per row
+      // Collect contour crossing points
       var contourPts = [];
       
-      // Scan horizontally — collect all crossing points for this elevation
+      // Horizontal scan
       for (var ny = 0; ny < 1; ny += cs) {
-        var rowPts = [];
         for (var nx = 0; nx < 1; nx += cs) {
           var e1 = el(nx, ny), e2 = el(nx + cs, ny);
           if ((e1 - ce) * (e2 - ce) < 0) {
             var tt = (ce - e1) / (e2 - e1);
             var cnx = nx + tt * cs;
             var p = pr(cnx, ny, ce);
-            rowPts.push({ x: p.x, y: p.y, nx: cnx, ny: ny });
+            contourPts.push({ x: p.x, y: p.y, nx: cnx, ny: ny });
           }
         }
-        for (var k = 0; k < rowPts.length; k++) contourPts.push(rowPts[k]);
       }
-      
-      // Also scan vertically
+      // Vertical scan
       for (var nx = 0; nx < 1; nx += cs) {
         for (var ny = 0; ny < 1; ny += cs) {
           var e1 = el(nx, ny), e3 = el(nx, ny + cs);
@@ -578,57 +582,68 @@ function draw() {
         }
       }
       
-      // Draw as dashed lines (dotted for minor, solid-ish for major)
+      // Draw as white dotted lines
       if (maj) {
-        g.setLineDash([]);
-        g.strokeStyle = 'rgba(255,255,240,0.55)';
-        g.lineWidth = 1.4;
+        // Major (every 10'): bold white dots
+        var ds = 2.2;
+        g.fillStyle = 'rgba(255,255,255,0.65)';
       } else {
-        g.setLineDash([3, 3]);
-        g.strokeStyle = 'rgba(200,210,220,0.25)';
-        g.lineWidth = 0.8;
+        // Minor (every 2'): fine white dots
+        var ds = 1.0;
+        g.fillStyle = 'rgba(255,255,255,0.22)';
       }
       
-      // Draw points as connected segments (sort by screen position)
-      // For cleaner rendering, draw as dots with appropriate size
-      var ds = maj ? 2.0 : 1.0;
-      g.fillStyle = maj ? 'rgba(255,255,240,0.55)' : 'rgba(200,210,220,0.25)';
       for (var k = 0; k < contourPts.length; k++) {
+        // Dotted pattern — skip every other point for dotted look
+        if (!maj && k % 2 === 0) continue;
         g.fillRect(contourPts[k].x - ds/2, contourPts[k].y - ds/2, ds, ds);
       }
-      g.setLineDash([]);
       
-      // Collect label candidates for major contours (every 8')
+      // Label every 10' elevation
       if (maj && show.L && contourPts.length > 0) {
-        // Find a point on the left side for labeling
+        // Find label position on left side
         var best = null;
         for (var k = 0; k < contourPts.length; k++) {
-          if (contourPts[k].nx > 0.08 && contourPts[k].nx < 0.18) {
-            if (!best || contourPts[k].ny > best.ny * 0.5) {
-              best = contourPts[k];
-            }
+          if (contourPts[k].nx > 0.06 && contourPts[k].nx < 0.16) {
+            if (!best) best = contourPts[k];
           }
         }
-        if (!best && contourPts.length > 0) best = contourPts[Math.floor(contourPts.length / 3)];
-        if (best) contourLabels[ce] = best;
+        // Also find one on right side for readability
+        var bestR = null;
+        for (var k = 0; k < contourPts.length; k++) {
+          if (contourPts[k].nx > 0.84 && contourPts[k].nx < 0.94) {
+            if (!bestR) bestR = contourPts[k];
+          }
+        }
+        if (!best && contourPts.length > 0) best = contourPts[Math.floor(contourPts.length / 4)];
+        if (best) contourLabels[ce] = { left: best, right: bestR };
       }
     }
     
-    // Draw contour elevation labels (every 8')
+    // Draw contour elevation labels (every 10')
     if (show.L) {
       for (var elv in contourLabels) {
-        var cp = contourLabels[elv];
-        g.font = 'bold 8px -apple-system,sans-serif';
-        g.textAlign = 'center';
-        var txt = elv + "'";
-        var tw = g.measureText(txt).width + 8;
-        g.fillStyle = 'rgba(8,14,22,0.88)';
-        g.fillRect(cp.x - tw/2, cp.y - 7, tw, 14);
-        g.strokeStyle = 'rgba(255,255,240,0.3)';
-        g.lineWidth = 0.5;
-        g.strokeRect(cp.x - tw/2, cp.y - 7, tw, 14);
-        g.fillStyle = 'rgba(255,255,240,0.9)';
-        g.fillText(txt, cp.x, cp.y + 3);
+        var positions = [contourLabels[elv].left];
+        if (contourLabels[elv].right) positions.push(contourLabels[elv].right);
+        
+        for (var pi = 0; pi < positions.length; pi++) {
+          var cp = positions[pi];
+          if (!cp) continue;
+          g.font = 'bold 8px -apple-system,sans-serif';
+          g.textAlign = 'center';
+          var txt = elv + "'";
+          var tw = g.measureText(txt).width + 8;
+          // Dark background pill
+          g.fillStyle = 'rgba(8,14,22,0.9)';
+          g.fillRect(cp.x - tw/2, cp.y - 7, tw, 14);
+          // White border
+          g.strokeStyle = 'rgba(255,255,255,0.3)';
+          g.lineWidth = 0.5;
+          g.strokeRect(cp.x - tw/2, cp.y - 7, tw, 14);
+          // White text
+          g.fillStyle = 'rgba(255,255,255,0.9)';
+          g.fillText(txt, cp.x, cp.y + 3);
+        }
       }
     }
   }
@@ -1342,7 +1357,7 @@ function draw() {
       g.fillStyle=col;g.fillText(txt,p.x,p.y);
     }
     
-    lb('W PACES FERRY RD NW (820\')', 0.50, 0.005, 5, '#ffdd66', 10);
+    lb('W PACES FERRY RD NW (818\')', 0.50, 0.005, 5, '#ffdd66', 10);
     lb('60\' CLIMB ↑', 0.25, 0.20, 5, 'rgba(255,150,100,0.6)', 8);
     lb('GRADED PAD (875\')', 0.45, 0.45, 26, '#ffffff', 11);
     lb('7,000 SF FOOTPRINT · 10K SF 2-STORY', 0.45, 0.45, 20, 'rgba(255,255,255,0.55)', 7);
@@ -1351,7 +1366,7 @@ function draw() {
     lb('REAR BOUNDARY (840\')', 0.50, 0.95, 3, 'rgba(255,180,100,0.5)', 8);
     
     if (show.D) {
-      lb('● ENTRY (820\')', 0.27, 0.03, 8, '#44ff66', 8);
+      lb('● ENTRY (818\')', 0.27, 0.03, 8, '#44ff66', 8);
       lb('EXISTING CURB CUT', 0.27, 0.005, 3, 'rgba(68,255,102,0.5)', 6);
       lb('● MOTOR COURT (875\')', 0.48, 0.38, 6, '#ffaa44', 8);
       lb('SWITCHBACK DRIVEWAY', 0.50, 0.12, 5, '#ff99cc', 8);
