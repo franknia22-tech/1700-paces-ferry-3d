@@ -66,7 +66,9 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none}
 <div class="rw"><span class="lb">Garage wing</span><span class="vl">34 ft × 28 ft</span></div>
 <div class="rw"><span class="lb">Total footprint</span><span class="vl">~7,000 SF</span></div>
 <div class="rw"><span class="lb">2-story total</span><span class="vl">~10,000 SF</span></div>
-<div class="rw"><span class="lb">Pool</span><span class="vl">West side (40'×20')</span></div>
+<div class="rw"><span class="lb">Pool</span><span class="vl">Backyard (40'×20')</span></div>
+<div class="rw"><span class="lb">West side</span><span class="vl">Pickleball + Mini Golf</span></div>
+<div class="rw"><span class="lb">East side</span><span class="vl">6-Car Port (60'×24')</span></div>
 
 <div class="sc">S-Curve Driveway</div>
 <div class="rw"><span class="lb">Rise</span><span class="vl">55 ft (820→875)</span></div>
@@ -815,8 +817,8 @@ function draw() {
     }
     g.closePath(); g.fill(); g.stroke();
     
-    // ── Pool (west side of house, on the 875' pad) ──
-    var poolCx=0.24, poolCy=0.45;
+    // ── Pool (backyard, behind house on 875' pad, before retaining wall 1) ──
+    var poolCx=0.48, poolCy=0.55;
     var poolW=40/LW/2, poolD=20/LD/2;
     var deckW=60/LW/2, deckD=35/LD/2;
     var poolE2=el(poolCx,poolCy);
@@ -842,6 +844,105 @@ function draw() {
             pr(mcCx+mcW,mcCy+mcD,mcE),pr(mcCx-mcW,mcCy+mcD,mcE)];
     g.beginPath();g.moveTo(mc[0].x,mc[0].y);g.lineTo(mc[1].x,mc[1].y);g.lineTo(mc[2].x,mc[2].y);g.lineTo(mc[3].x,mc[3].y);g.closePath();g.fill();g.stroke();
     
+    // ── WEST SIDE: Pickleball Court + Mini Golf ──
+    // Pickleball: 44'×20' (playing area) + buffer = 60'×30' total
+    var pkCx = 0.22, pkCy = 0.44;
+    var pkW = 30/LW/2, pkD = 60/LD/2;
+    var pkE = el(pkCx, pkCy);
+    // Court surface
+    g.fillStyle = 'rgba(50,140,80,0.45)';
+    g.strokeStyle = 'rgba(255,255,255,0.35)';
+    g.lineWidth = 1;
+    var pk = [pr(pkCx-pkW,pkCy-pkD,pkE), pr(pkCx+pkW,pkCy-pkD,pkE),
+              pr(pkCx+pkW,pkCy+pkD,pkE), pr(pkCx-pkW,pkCy+pkD,pkE)];
+    g.beginPath();g.moveTo(pk[0].x,pk[0].y);g.lineTo(pk[1].x,pk[1].y);
+    g.lineTo(pk[2].x,pk[2].y);g.lineTo(pk[3].x,pk[3].y);g.closePath();g.fill();g.stroke();
+    // Court lines — center net line
+    var pkM1=pr(pkCx-pkW,pkCy,pkE), pkM2=pr(pkCx+pkW,pkCy,pkE);
+    g.strokeStyle='rgba(255,255,255,0.5)';g.lineWidth=0.8;
+    g.beginPath();g.moveTo(pkM1.x,pkM1.y);g.lineTo(pkM2.x,pkM2.y);g.stroke();
+    // Kitchen lines (7' from net each side)
+    var kitOff = 7/LD;
+    var pkK1a=pr(pkCx-pkW,pkCy-kitOff,pkE),pkK1b=pr(pkCx+pkW,pkCy-kitOff,pkE);
+    var pkK2a=pr(pkCx-pkW,pkCy+kitOff,pkE),pkK2b=pr(pkCx+pkW,pkCy+kitOff,pkE);
+    g.setLineDash([3,2]);
+    g.beginPath();g.moveTo(pkK1a.x,pkK1a.y);g.lineTo(pkK1b.x,pkK1b.y);g.stroke();
+    g.beginPath();g.moveTo(pkK2a.x,pkK2a.y);g.lineTo(pkK2b.x,pkK2b.y);g.stroke();
+    g.setLineDash([]);
+    
+    // Mini Golf: south of pickleball (irregular green shape)
+    var mgCx = 0.20, mgCy = 0.54;
+    var mgW = 35/LW/2, mgD = 40/LD/2;
+    var mgE = el(mgCx, mgCy);
+    // Putting green shape (rounded)
+    g.fillStyle = 'rgba(40,160,60,0.4)';
+    g.strokeStyle = 'rgba(80,200,80,0.35)';
+    g.lineWidth = 0.8;
+    g.beginPath();
+    for (var a = 0; a < Math.PI*2; a += 0.15) {
+      var rx = mgW * (1 + 0.2*Math.sin(a*3)) * Math.cos(a);
+      var ry = mgD * (1 + 0.15*Math.cos(a*2.5)) * Math.sin(a);
+      var mp = pr(mgCx + rx, mgCy + ry, mgE);
+      if (a === 0) g.moveTo(mp.x, mp.y); else g.lineTo(mp.x, mp.y);
+    }
+    g.closePath(); g.fill(); g.stroke();
+    // Flag markers (3 holes visible)
+    var flags = [{nx:mgCx-0.02,ny:mgCy-0.02},{nx:mgCx+0.02,ny:mgCy+0.01},{nx:mgCx-0.01,ny:mgCy+0.03}];
+    for (var fi=0; fi<flags.length; fi++) {
+      var fp = pr(flags[fi].nx, flags[fi].ny, mgE);
+      g.strokeStyle='rgba(200,50,50,0.7)';g.lineWidth=1;
+      g.beginPath();g.moveTo(fp.x,fp.y);g.lineTo(fp.x,fp.y-8*zoom);g.stroke();
+      g.fillStyle='rgba(220,50,50,0.6)';
+      g.beginPath();g.moveTo(fp.x,fp.y-8*zoom);g.lineTo(fp.x+4*zoom,fp.y-6*zoom);g.lineTo(fp.x,fp.y-4*zoom);g.closePath();g.fill();
+    }
+    
+    // ── EAST SIDE: 6-Car Port ──
+    // 6 cars = ~60'×24' (3 bays deep × 2 rows, or 6 inline)
+    // Layout: 3×2 = 60' wide × 24' deep
+    var cpCx = 0.72, cpCy = 0.43;
+    var cpW = 60/LW/2, cpD = 24/LD/2;
+    var cpE = el(cpCx, cpCy);
+    var cpRoofH = 12;
+    var cpRoofE = cpE + cpRoofH / Math.max(exag, 0.3);
+    
+    // Floor slab
+    g.fillStyle = 'rgba(100,100,100,0.4)';
+    g.strokeStyle = 'rgba(130,130,130,0.4)';
+    g.lineWidth = 0.8;
+    var cpFloor = [pr(cpCx-cpW,cpCy-cpD,cpE),pr(cpCx+cpW,cpCy-cpD,cpE),
+                   pr(cpCx+cpW,cpCy+cpD,cpE),pr(cpCx-cpW,cpCy+cpD,cpE)];
+    g.beginPath();g.moveTo(cpFloor[0].x,cpFloor[0].y);g.lineTo(cpFloor[1].x,cpFloor[1].y);
+    g.lineTo(cpFloor[2].x,cpFloor[2].y);g.lineTo(cpFloor[3].x,cpFloor[3].y);g.closePath();g.fill();g.stroke();
+    
+    // Support columns (6 columns along front edge)
+    var colW = 1.5/LW;
+    for (var ci = 0; ci < 6; ci++) {
+      var cx2 = cpCx - cpW + (2*ci+1) * cpW/3;
+      var colBot = pr(cx2, cpCy-cpD, cpE);
+      var colTop = pr(cx2, cpCy-cpD, cpRoofE);
+      g.strokeStyle = 'rgba(180,180,180,0.6)';
+      g.lineWidth = 2;
+      g.beginPath();g.moveTo(colBot.x,colBot.y);g.lineTo(colTop.x,colTop.y);g.stroke();
+    }
+    
+    // Roof
+    g.fillStyle = 'rgba(160,155,150,0.45)';
+    g.strokeStyle = 'rgba(120,115,110,0.4)';
+    g.lineWidth = 0.8;
+    var cpRoof = [pr(cpCx-cpW-0.005,cpCy-cpD-0.005,cpRoofE),pr(cpCx+cpW+0.005,cpCy-cpD-0.005,cpRoofE),
+                  pr(cpCx+cpW+0.005,cpCy+cpD+0.005,cpRoofE),pr(cpCx-cpW-0.005,cpCy+cpD+0.005,cpRoofE)];
+    g.beginPath();g.moveTo(cpRoof[0].x,cpRoof[0].y);g.lineTo(cpRoof[1].x,cpRoof[1].y);
+    g.lineTo(cpRoof[2].x,cpRoof[2].y);g.lineTo(cpRoof[3].x,cpRoof[3].y);g.closePath();g.fill();g.stroke();
+    
+    // Car bay lines (6 bays)
+    g.strokeStyle = 'rgba(255,255,255,0.2)';g.lineWidth = 0.5;
+    for (var bi = 1; bi < 6; bi++) {
+      var bx = cpCx - cpW + bi * (2*cpW)/6;
+      var bl1 = pr(bx, cpCy-cpD, cpE);
+      var bl2 = pr(bx, cpCy+cpD, cpE);
+      g.beginPath();g.moveTo(bl1.x,bl1.y);g.lineTo(bl2.x,bl2.y);g.stroke();
+    }
+    
     // Dimension labels
     if (show.L) {
       var lbH = function(txt,nx,ny,oy,col,sz) {
@@ -851,18 +952,30 @@ function draw() {
         g.fillStyle='rgba(0,0,0,0.4)';g.fillText(txt,p.x+1,p.y+1);
         g.fillStyle=col;g.fillText(txt,p.x,p.y);
       };
-      // House dimensions
+      // House
       lbH("90'", 0.45, 0.51, 5, '#44aaff', 7);
       lbH("50'", 0.57, 0.45, 5, '#44aaff', 7);
       lbH("GARAGE 34'×28'", 0.56, 0.42, 8, 'rgba(68,170,255,0.6)', 6);
       lbH("WEST WING 45'×35'", 0.30, 0.45, 8, 'rgba(68,170,255,0.6)', 6);
-      lbH("~7,000 SF FOOTPRINT", 0.45, 0.45, 12, 'rgba(68,170,255,0.5)', 6);
+      lbH("~7,000 SF", 0.45, 0.45, 12, 'rgba(68,170,255,0.5)', 6);
       
-      // Pool (east side of house)
+      // Pool (backyard)
       lbH("POOL 40'×20'", poolCx, poolCy, 8, '#44ccff', 7);
-      lbH("DECK 60'×35'", poolCx, poolCy+0.03, 4, 'rgba(160,180,200,0.5)', 6);
+      lbH("DECK", poolCx, poolCy+0.025, 4, 'rgba(160,180,200,0.5)', 6);
       
-      // Motor court (front of house, between driveway arrival and house)
+      // Pickleball
+      lbH("PICKLEBALL", pkCx, pkCy, 8, '#aaffaa', 7);
+      lbH("44'×20'", pkCx, pkCy, 2, 'rgba(170,255,170,0.5)', 6);
+      
+      // Mini Golf
+      lbH("MINI GOLF", mgCx, mgCy, 8, '#88ee88', 7);
+      lbH("PUTTING GREEN", mgCx, mgCy, 2, 'rgba(136,238,136,0.5)', 6);
+      
+      // 6-Car Port
+      lbH("6-CAR PORT", cpCx, cpCy, 16, '#ddddcc', 8);
+      lbH("60'×24'", cpCx, cpCy, 10, 'rgba(200,200,190,0.5)', 6);
+      
+      // Motor court
       lbH("MOTOR COURT", mcCx, mcCy, 5, '#ccccaa', 7);
     }
   }
