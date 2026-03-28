@@ -68,7 +68,7 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none}
 <div class="rw"><span class="lb">2-story total</span><span class="vl">~10,000 SF</span></div>
 <div class="rw"><span class="lb">Pool</span><span class="vl">Backyard (40'×20')</span></div>
 <div class="rw"><span class="lb">West side</span><span class="vl">Pickleball + Mini Golf</span></div>
-<div class="rw"><span class="lb">East side</span><span class="vl">3+3 Garage (facing) + Carport</span></div>
+<div class="rw"><span class="lb">East side</span><span class="vl">3+3 Garage + Car Court</span></div>
 
 <div class="sc">S-Curve Driveway</div>
 <div class="rw"><span class="lb">Rise</span><span class="vl">55 ft (820→875)</span></div>
@@ -287,9 +287,9 @@ function el(nx, ny) {
   // ── DRIVEWAY GRADING — flatten turning areas, 30' wide ──
   // S-curve waypoints (must match driveway function)
   var dwWP = [
-    {nx:0.82,ny:0.025}, {nx:0.75,ny:0.05}, {nx:0.60,ny:0.09},
-    {nx:0.40,ny:0.14}, {nx:0.22,ny:0.19}, {nx:0.15,ny:0.24},
-    {nx:0.22,ny:0.29}, {nx:0.38,ny:0.33}, {nx:0.52,ny:0.35},
+    {nx:0.27,ny:0.025}, {nx:0.32,ny:0.05}, {nx:0.48,ny:0.09},
+    {nx:0.65,ny:0.14}, {nx:0.78,ny:0.19}, {nx:0.82,ny:0.24},
+    {nx:0.75,ny:0.29}, {nx:0.60,ny:0.33}, {nx:0.50,ny:0.36},
     {nx:0.48,ny:0.38}
   ];
   // Check distance to each waypoint — flatten within 15' radius (30' wide)
@@ -348,20 +348,19 @@ function el(nx, ny) {
 function driveway(n) {
   var pts = [];
   
-  // Driveway per green markup on screenshot:
-  // Entry far RIGHT of road → sweeps LEFT (west) along lower slope →
-  // big switchback turn on LEFT side → comes back RIGHT (east) climbing →
-  // curves into motor court
+  // Driveway: starts at EXISTING entry (left/west third, per survey)
+  // Switchback: entry left → sweeps RIGHT (east) → switchback on right
+  // → comes back LEFT (west) climbing → motor court at house
   var waypoints = [
-    { nx: 0.82, ny: 0.025 },  // 0: entry far right of road
-    { nx: 0.75, ny: 0.05 },   // 1: heading left/west
-    { nx: 0.60, ny: 0.09 },   // 2: sweeping left along lower slope
-    { nx: 0.40, ny: 0.14 },   // 3: continuing west
-    { nx: 0.22, ny: 0.19 },   // 4: approaching far left
-    { nx: 0.15, ny: 0.24 },   // 5: switchback turn (far west)
-    { nx: 0.22, ny: 0.29 },   // 6: turning back east
-    { nx: 0.38, ny: 0.33 },   // 7: climbing east
-    { nx: 0.52, ny: 0.35 },   // 8: approaching house from south
+    { nx: 0.27, ny: 0.025 },  // 0: entry at existing curb cut (west third)
+    { nx: 0.32, ny: 0.05 },   // 1: heading right/east
+    { nx: 0.48, ny: 0.09 },   // 2: sweeping right along lower slope
+    { nx: 0.65, ny: 0.14 },   // 3: continuing east
+    { nx: 0.78, ny: 0.19 },   // 4: approaching far right
+    { nx: 0.82, ny: 0.24 },   // 5: switchback turn (far east)
+    { nx: 0.75, ny: 0.29 },   // 6: turning back west
+    { nx: 0.60, ny: 0.33 },   // 7: climbing west toward house
+    { nx: 0.50, ny: 0.36 },   // 8: approaching motor court
     { nx: 0.48, ny: 0.38 },   // 9: arrival at motor court
   ];
   
@@ -905,7 +904,7 @@ function draw() {
     // Two 3-car garage buildings facing each other across a covered courtyard
     // Each garage: 36'×24' (3 bays × 24' deep). Courtyard between: 24' wide
     // Total footprint: 36' wide × (24+24+24) = 36'×72'
-    var grCx = 0.32, grCy = 0.38; // garage SW of house, between court and parking
+    var grCx = 0.68, grCy = 0.44; // garage EAST of house
     var bayW = 36/LW/2;     // half-width of each garage (36' total)
     var bayD = 24/LD/2;     // half-depth of each garage (24')
     var courtW = 24/LD/2;   // half-width of courtyard between (24')
@@ -1277,7 +1276,8 @@ function draw() {
     lb('REAR BOUNDARY (840\')', 0.50, 0.95, 3, 'rgba(255,180,100,0.5)', 8);
     
     if (show.D) {
-      lb('● ENTRY (820\')', 0.82, 0.03, 8, '#44ff66', 8);
+      lb('● ENTRY (820\')', 0.27, 0.03, 8, '#44ff66', 8);
+      lb('EXISTING CURB CUT', 0.27, 0.005, 3, 'rgba(68,255,102,0.5)', 6);
       lb('● MOTOR COURT (875\')', 0.48, 0.38, 6, '#ffaa44', 8);
       lb('SWITCHBACK DRIVEWAY', 0.50, 0.12, 5, '#ff99cc', 8);
       lb('30\' WIDE · ~15% GRADE', 0.50, 0.15, 3, '#ff99cc', 7);
